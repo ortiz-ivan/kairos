@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Ventas</h2>
+    <a href="{{ url_for('agregar_venta_view') }}" class="btn btn-success mb-3">
+        <i class="bi bi-plus-lg"></i> Registrar Venta
+    </a>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Total (₲)</th>
+                    <th>Productos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for venta in ventas %}
+                <tr>
+                    <td>{{ venta['id'] }}</td>
+                    <td>{{ venta['fecha'] }}</td>
+                    <td>
+                        <span class="{% if venta['total'] >= 1000000 %}text-success{% else %}text-primary{% endif %}">
+                            ₲{{ '{:,.0f}'.format(venta['total']) }}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#productos-{{ venta['id'] }}" aria-expanded="false" aria-controls="productos-{{ venta['id'] }}">
+                            Ver Productos
+                        </button>
+                        <div class="collapse mt-2" id="productos-{{ venta['id'] }}">
+                            <ul class="list-group">
+                                {% for detalle in obtener_detalle_venta(venta['id']) %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ detalle['nombre'] }} (x{{ detalle['cantidad'] }})
+                                    <span>₲{{ '{:,.0f}'.format(detalle['subtotal']) }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Opcional: puedes agregar algún efecto al desplegar productos
+});
+</script>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Editar Producto</h2>
+    <form method="POST">
+        <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-control" name="nombre" value="{{ producto['nombre'] }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Precio</label>
+            <input type="number" step="1" class="form-control" name="precio" value="{{ producto['precio'] }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Stock</label>
+            <input type="number" class="form-control" name="stock" value="{{ producto['stock'] }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Categoría</label>
+            <input type="text" class="form-control" name="categoria" value="{{ producto['categoria'] }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Código de barras</label>
+            <input type="text" class="form-control" name="codigo_barras" value="{{ producto['codigo_barras'] }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+    </form>
+</div>
+{% endblock %}

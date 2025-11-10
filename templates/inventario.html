@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Inventario de Productos</h2>
+
+    <!-- Resumen de inventario -->
+    {% set total_productos = productos|length %}
+    {% set stock_bajo_count = productos|selectattr("stock", "le", stock_bajo)|list|length %}
+    {% set stock_medio_count = productos|selectattr("stock", "gt", stock_bajo)|selectattr("stock", "le", stock_bajo + 5)|list|length %}
+
+    <div class="mb-4">
+        <span class="badge bg-primary">Total productos: {{ total_productos }}</span>
+        <span class="badge bg-danger">Stock bajo: {{ stock_bajo_count }}</span>
+        <span class="badge bg-warning text-dark">Stock medio: {{ stock_medio_count }}</span>
+    </div>
+
+    <!-- Filtro de categoría -->
+    <div class="mb-3 d-flex align-items-center gap-2">
+        <label for="filtro_categoria" class="form-label mb-0">Filtrar por categoría:</label>
+        <select id="filtro_categoria" class="form-select w-auto">
+            <option value="">Todas</option>
+            {% for cat in categorias %}
+                <option value="{{ cat }}" {% if filtro_categoria == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Código</th>
+                    <th>Producto</th>
+                    <th>Precio (₲)</th>
+                    <th>Stock</th>
+                    <th>Categoría</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos %}
+                <tr class="stock-row" data-categoria="{{ producto['categoria'] }}">
+                    <td>{{ producto['id'] }}</td>
+                    <td>{{ producto['codigo_barras'] }}</td>
+                    <td>{{ producto['nombre'] }}</td>
+                    <td>₲{{ '{:,.0f}'.format(producto['precio']) }}</td>
+                    <td>
+                        {% if producto['stock'] <= stock_bajo %}
+                            <span class="badge bg-danger">{{ producto['stock'] }}</span>
+                        {% elif producto['stock'] <= stock_bajo + 5 %}
+                            <span class="badge bg-warning text-dark">{{ producto['stock'] }}</span>
+                        {% else %}
+                            <span class="badge bg-success">{{ producto['stock'] }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ producto['categoria'] }}</td>
+                    <td class="d-flex gap-1">
+                        <a href="{{ url_for('editar_producto_view', producto_id=producto['id']) }}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-pencil-fill"></i> Editar
+                        </a>
+                        <a href="{{ url_for('eliminar_producto_view', producto_id=producto['id']) }}" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash-fill"></i> Eliminar
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <p class="mt-2">
+        <span class="badge bg-danger">Rojo</span> stock bajo ≤ {{ stock_bajo }},
+        <span class="badge bg-warning text-dark">Amarillo</span> stock medio,
+        <span class="badge bg-success">Verde</span> stock suficiente
+    </p>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const filas = document.querySelectorAll(".stock-row");
+    const filtro = document.getElementById("filtro_categoria");
+
+    // Filtro de categoría
+    filtro.addEventListener("change", () => {
+        const categoria = filtro.value;
+        filas.forEach(fila => {
+            fila.style.display = (!categoria || fila.dataset.categoria === categoria) ? "" : "none";
+        });
+    });
+});
+</script>
+{% endblock %}

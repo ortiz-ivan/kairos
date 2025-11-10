@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Productos</h2>
+    <a href="{{ url_for('agregar_producto_view') }}" class="btn btn-success mb-3">Agregar Producto</a>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Categoría</th>
+                <th>Código de barras</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos %}
+            <tr>
+                <td>{{ producto['id'] }}</td>
+                <td>{{ producto['nombre'] }}</td>
+                <td>₲{{ '{:,.0f}'.format(producto['precio']) }}</td>
+                <td>{{ producto['stock'] }}</td>
+                <td>{{ producto['categoria'] }}</td>
+                <td>{{ producto['codigo_barras'] }}</td>
+                <td>
+                    <a href="{{ url_for('editar_producto_view', producto_id=producto['id']) }}" class="btn btn-warning btn-sm">Editar</a>
+                    <a href="{{ url_for('eliminar_producto_view', producto_id=producto['id']) }}" class="btn btn-danger btn-sm">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
