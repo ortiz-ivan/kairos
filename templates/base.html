@@ -44,11 +44,11 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint.startswith('ventas') %}active{% endif %}" href="{{ url_for('ventas.listado_ventas') }}">Ventas</a>
                     </li>
+
+                    {% if session.get('rol') == 'admin' %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint.startswith('inventario') %}active{% endif %}" href="{{ url_for('inventario.inventario_view') }}">Inventario</a>
                     </li>
-
-                    {% if session.get('rol') == 'admin' %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint.startswith('admin') %}active{% endif %}"
                            href="{{ url_for('admin.admin_usuarios') }}">

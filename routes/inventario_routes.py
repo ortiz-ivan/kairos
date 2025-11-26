@@ -17,8 +17,20 @@ def login_required(f):
     return decorated
 
 
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if g.usuario is None or g.usuario["rol"] != "admin":
+            flash("Acceso denegado. Solo administradores.", "error")
+            return redirect(url_for("ventas.agregar_venta_view"))
+        return f(*args, **kwargs)
+
+    return decorated
+
+
 @inventario_bp.route("/")
 @login_required
+@admin_required
 def inventario_view():
     productos_list = obtener_productos()
     categorias = sorted({p["categoria"] for p in productos_list})
@@ -32,6 +44,7 @@ def inventario_view():
 
 @inventario_bp.route("/sugerencias")
 @login_required
+@admin_required
 def sugerencias_producto():
     q = request.args.get("q", "")
     productos = obtener_productos()
