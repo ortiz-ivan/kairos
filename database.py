@@ -69,6 +69,7 @@ def init_db():
         """
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             rol TEXT NOT NULL
@@ -78,13 +79,21 @@ def init_db():
 
     conn.commit()
 
+    # Verificar si la columna 'nombre' existe en usuarios, sino crearla
+    cursor.execute("PRAGMA table_info(usuarios)")
+    columns = [column[1] for column in cursor.fetchall()]
+    if "nombre" not in columns:
+        cursor.execute("ALTER TABLE usuarios ADD COLUMN nombre TEXT")
+        print("Columna 'nombre' agregada a la tabla usuarios")
+        conn.commit()
+
     # Crear usuario admin inicial si no existe
     cursor.execute("SELECT * FROM usuarios WHERE username = ?", ("admin",))
     if not cursor.fetchone():
         hashed_password = generate_password_hash("admin123")
         cursor.execute(
-            "INSERT INTO usuarios (username, password, rol) VALUES (?, ?, ?)",
-            ("admin", hashed_password, "admin"),
+            "INSERT INTO usuarios (nombre, username, password, rol) VALUES (?, ?, ?, ?)",
+            ("Administrador", "admin", hashed_password, "admin"),
         )
         conn.commit()
 

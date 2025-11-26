@@ -50,13 +50,13 @@
         <div class="mb-3">
           <label for="rol" class="form-label">Rol</label>
           <select name="rol" id="rol" class="form-select" required>
-            <option value="vendedor" {% if usuario and usuario.rol == 'vendedor' %}selected{% endif %}>Vendedor</option>
             <option value="admin" {% if usuario and usuario.rol == 'admin' %}selected{% endif %}>Administrador</option>
+            <option value="usuario" {% if usuario and usuario.rol == 'usuario' %}selected{% endif %}>Usuario</option>
           </select>
         </div>
 
         <div class="d-flex justify-content-between">
-          <a href="{{ url_for('admin_usuarios') }}" class="btn btn-secondary">
+          <a href="{{ url_for('admin.admin_usuarios') }}" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> Volver
           </a>
           <button type="submit" class="btn btn-success">

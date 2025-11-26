@@ -2,6 +2,9 @@
 {% block content %}
 <div class="container mt-4">
     <h2 class="mb-3">Inventario de Productos</h2>
+    <a href="{{ url_for('productos.agregar_producto_view') }}" class="btn btn-success mb-3">
+        <i class="bi bi-plus-lg"></i> Agregar Producto
+    </a>
 
     <!-- Resumen de inventario -->
     {% set total_productos = productos|length %}
@@ -56,10 +59,10 @@
                     </td>
                     <td>{{ producto['categoria'] }}</td>
                     <td class="d-flex gap-1">
-                        <a href="{{ url_for('editar_producto_view', producto_id=producto['id']) }}" class="btn btn-primary btn-sm">
+                        <a href="{{ url_for('productos.editar_producto_view', id=producto['id']) }}" class="btn btn-primary btn-sm">
                             <i class="bi bi-pencil-fill"></i> Editar
                         </a>
-                        <a href="{{ url_for('eliminar_producto_view', producto_id=producto['id']) }}" class="btn btn-danger btn-sm">
+                        <a href="{{ url_for('productos.eliminar_producto_view', id=producto['id']) }}" class="btn btn-danger btn-sm">
                             <i class="bi bi-trash-fill"></i> Eliminar
                         </a>
                     </td>

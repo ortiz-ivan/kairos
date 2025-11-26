@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const resp = await fetch(`/api/sugerencias_producto?q=${q}`);
+            const resp = await fetch(`/inventario/sugerencias?q=${q}`);
             const data = await resp.json();
             datalist.innerHTML = "";
             data.forEach(p => {
@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!codigo) return;
 
             try {
-                const resp = await fetch(`/api/buscar_producto/${codigo}`);
+                const resp = await fetch(`/ventas/buscar/${codigo}`);
                 const data = await resp.json();
 
                 if (data.success) {

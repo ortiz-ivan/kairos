@@ -30,7 +30,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('index') }}">Kairos</a>
+            <a class="navbar-brand" href="{{ url_for('auth.login') }}">Kairos</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -39,19 +39,19 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'productos' %}active{% endif %}" href="{{ url_for('productos') }}">Productos</a>
+                        <a class="nav-link {% if request.endpoint.startswith('productos') %}active{% endif %}" href="{{ url_for('productos.productos_list') }}">Productos</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'ventas' %}active{% endif %}" href="{{ url_for('ventas') }}">Ventas</a>
+                        <a class="nav-link {% if request.endpoint.startswith('ventas') %}active{% endif %}" href="{{ url_for('ventas.listado_ventas') }}">Ventas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'inventario' %}active{% endif %}" href="{{ url_for('inventario') }}">Inventario</a>
+                        <a class="nav-link {% if request.endpoint.startswith('inventario') %}active{% endif %}" href="{{ url_for('inventario.inventario_view') }}">Inventario</a>
                     </li>
 
                     {% if session.get('rol') == 'admin' %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint.startswith('admin_usuarios') %}active{% endif %}"
-                           href="{{ url_for('admin_usuarios') }}">
+                        <a class="nav-link {% if request.endpoint.startswith('admin') %}active{% endif %}"
+                           href="{{ url_for('admin.admin_usuarios') }}">
                             Panel Admin
                         </a>
                     </li>
@@ -64,11 +64,11 @@
                             <span class="nav-link text-light">Hola, {{ g.usuario['username'] }}</span>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link btn btn-outline-light btn-sm ms-2" href="{{ url_for('logout') }}">Cerrar sesión</a>
+                            <a class="nav-link btn btn-outline-light btn-sm ms-2" href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('login') }}">Iniciar sesión</a>
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">Iniciar sesión</a>
                         </li>
                     {% endif %}
                 </ul>
