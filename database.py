@@ -45,7 +45,10 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             fecha TEXT NOT NULL,
             total REAL NOT NULL
-        )
+            ,
+                usuario_id INTEGER NOT NULL,
+                FOREIGN KEY(usuario_id) REFERENCES usuarios(id)
+            )
         """
     )
 
@@ -85,6 +88,14 @@ def init_db():
     if "nombre" not in columns:
         cursor.execute("ALTER TABLE usuarios ADD COLUMN nombre TEXT")
         print("Columna 'nombre' agregada a la tabla usuarios")
+        conn.commit()
+
+    # Verificar si la columna 'usuario_id' existe en ventas, sino crearla
+    cursor.execute("PRAGMA table_info(ventas)")
+    columns = [column[1] for column in cursor.fetchall()]
+    if "usuario_id" not in columns:
+        cursor.execute("ALTER TABLE ventas ADD COLUMN usuario_id INTEGER")
+        print("Columna 'usuario_id' agregada a la tabla ventas")
         conn.commit()
 
     # Crear usuario admin inicial si no existe

@@ -7,10 +7,11 @@ from datetime import datetime
 # ------------------------------
 
 
-def registrar_venta(productos_cantidades):
+def registrar_venta(productos_cantidades, usuario_id=None):
     """
     Registra una venta.
     productos_cantidades: lista de dicts [{"id": 1, "cantidad": 2}, ...]
+    usuario_id: ID del usuario que realiza la venta
     """
     conn = get_connection()
     cursor = conn.cursor()
@@ -37,7 +38,8 @@ def registrar_venta(productos_cantidades):
         # Insertar venta
         fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cursor.execute(
-            "INSERT INTO ventas (fecha, total) VALUES (?, ?)", (fecha, total)
+            "INSERT INTO ventas (fecha, total, usuario_id) VALUES (?, ?, ?)",
+            (fecha, total, usuario_id),
         )
         venta_id = cursor.lastrowid
 
@@ -92,7 +94,14 @@ def obtener_ventas():
     """Devuelve todas las ventas."""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM ventas ORDER BY fecha DESC")
+    cursor.execute(
+        """
+        SELECT v.id, v.fecha, v.total, v.usuario_id, u.username
+        FROM ventas v
+        LEFT JOIN usuarios u ON v.usuario_id = u.id
+        ORDER BY v.fecha DESC
+    """
+    )
     ventas = cursor.fetchall()
     conn.close()
     return ventas

@@ -28,7 +28,9 @@ def agregar_venta_view():
         if productos_json:
             try:
                 productos_cantidades = json.loads(productos_json)
-                exito = registrar_venta(productos_cantidades)
+                exito = registrar_venta(
+                    productos_cantidades, usuario_id=g.usuario["id"]
+                )
                 flash(
                     (
                         "Venta registrada correctamente."

@@ -12,6 +12,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Fecha</th>
+                    <th>Usuario</th>
                     <th>Total (₲)</th>
                     <th>Productos</th>
                 </tr>
@@ -21,6 +22,7 @@
                 <tr>
                     <td>{{ venta['id'] }}</td>
                     <td>{{ venta['fecha'] }}</td>
+                    <td>{{ venta['username'] if venta['username'] else '-' }}</td>
                     <td>
                         <span class="{% if venta['total'] >= 1000000 %}text-success{% else %}text-primary{% endif %}">
                             ₲{{ '{:,.0f}'.format(venta['total']) }}
