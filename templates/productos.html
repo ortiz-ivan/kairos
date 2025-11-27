@@ -2,6 +2,32 @@
 {% block content %}
 <div class="container mt-4">
     <h2>Productos</h2>
+    
+    <!-- Filtros -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="categoria" class="form-label">Filtrar por categoría</label>
+                    <select id="categoria" name="categoria" class="form-select">
+                        <option value="">Todas las categorías</option>
+                        {% for cat in categorias %}
+                        <option value="{{ cat }}" {% if categoria_filtro == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="codigo" class="form-label">Filtrar por código de barras</label>
+                    <input type="text" id="codigo" name="codigo" class="form-control" placeholder="Ej. 1234..." value="{{ codigo_filtro }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+                    <a href="{{ url_for('productos.productos_list') }}" class="btn btn-secondary">Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <table class="table table-striped">
         <thead>
             <tr>

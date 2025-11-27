@@ -40,7 +40,37 @@ def roles_requeridos(*roles):
 @productos_bp.route("/")
 @login_required
 def productos_list():
-    return render_template("productos.html", productos=obtener_productos())
+    productos = obtener_productos()
+
+    # Filtrar por categoría si se proporciona en query string
+    categoria_filtro = request.args.get("categoria", "").strip()
+    if categoria_filtro:
+        productos = [
+            p
+            for p in productos
+            if p["categoria"] and categoria_filtro.lower() in p["categoria"].lower()
+        ]
+
+    # Filtrar por código de barras si se proporciona en query string
+    codigo_filtro = request.args.get("codigo", "").strip()
+    if codigo_filtro:
+        productos = [
+            p
+            for p in productos
+            if p["codigo_barras"]
+            and codigo_filtro.lower() in p["codigo_barras"].lower()
+        ]
+
+    # Obtener lista de categorías únicas para el select
+    categorias = sorted({p["categoria"] for p in obtener_productos() if p["categoria"]})
+
+    return render_template(
+        "productos.html",
+        productos=productos,
+        categorias=categorias,
+        categoria_filtro=categoria_filtro,
+        codigo_filtro=codigo_filtro,
+    )
 
 
 @productos_bp.route("/agregar", methods=["GET", "POST"])
