@@ -8,20 +8,23 @@
                     <h4 class="mb-0">Agregar Nuevo Producto</h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" novalidate>
+                    <form method="POST" novalidate id="formAgregarProducto">
                         <div class="mb-3">
                             <label for="nombre" class="form-label">Nombre</label>
                             <input type="text" class="form-control" name="nombre" id="nombre" placeholder="Ingrese el nombre del producto" required>
+                            <small class="form-text text-muted">Requerido</small>
                         </div>
 
                         <div class="mb-3">
                             <label for="precio" class="form-label">Precio (₲)</label>
-                            <input type="number" step="1" class="form-control" name="precio" id="precio" placeholder="Ingrese el precio en guaraníes" required>
+                            <input type="number" step="1" min="0" class="form-control" name="precio" id="precio" placeholder="Ingrese el precio en guaraníes" required>
+                            <small class="form-text text-muted">Debe ser un número positivo</small>
                         </div>
 
                         <div class="mb-3">
                             <label for="stock" class="form-label">Stock</label>
-                            <input type="number" class="form-control" name="stock" id="stock" placeholder="Cantidad disponible" required>
+                            <input type="number" min="0" class="form-control" name="stock" id="stock" placeholder="Cantidad disponible" required>
+                            <small class="form-text text-muted">Debe ser un número positivo</small>
                         </div>
 
                         <div class="mb-3">
@@ -32,10 +35,18 @@
                         <div class="mb-3">
                             <label for="codigo_barras" class="form-label">Código de Barras</label>
                             <input type="text" class="form-control" name="codigo_barras" id="codigo_barras" placeholder="Ej. 1234567890" required>
+                            <small class="form-text text-muted">Código único del producto</small>
+                            <div id="advertenciaCodigoDuplicado" class="alert alert-warning mt-2 d-none" role="alert">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <strong>Advertencia:</strong> Este código de barras ya existe en el sistema.
+                            </div>
+                            <div id="estadoVerificacion" class="alert alert-info mt-2 d-none" role="alert">
+                                <small><i class="bi bi-hourglass-split"></i> Verificando disponibilidad...</small>
+                            </div>
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success">Agregar Producto</button>
+                            <button type="submit" class="btn btn-success" id="btnAgregar">Agregar Producto</button>
                         </div>
                     </form>
                 </div>
@@ -47,4 +58,82 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputCodigoBarras = document.getElementById('codigo_barras');
+    const advertencia = document.getElementById('advertenciaCodigoDuplicado');
+    const estadoVerificacion = document.getElementById('estadoVerificacion');
+    const btnAgregar = document.getElementById('btnAgregar');
+    const form = document.getElementById('formAgregarProducto');
+    let timerVerificacion;
+
+    // Validar código de barras en tiempo real con debounce
+    inputCodigoBarras.addEventListener('input', function() {
+        const codigo = this.value.trim();
+        
+        // Limpiar timer anterior
+        clearTimeout(timerVerificacion);
+        
+        if (!codigo) {
+            advertencia.classList.add('d-none');
+            estadoVerificacion.classList.add('d-none');
+            btnAgregar.disabled = false;
+            btnAgregar.classList.remove('disabled');
+            return;
+        }
+
+        // Mostrar estado de verificación
+        estadoVerificacion.classList.remove('d-none');
+        
+        // Esperar a que el usuario deje de escribir (debounce)
+        timerVerificacion = setTimeout(async function() {
+            try {
+                // Verificar si el código existe usando el endpoint de búsqueda
+                const response = await fetch(`{{ url_for('ventas.buscar_producto', codigo_barras='PLACEHOLDER') }}`.replace('PLACEHOLDER', encodeURIComponent(codigo)));
+                const data = await response.json();
+                
+                estadoVerificacion.classList.add('d-none');
+                
+                if (data.success) {
+                    // El código existe
+                    advertencia.classList.remove('d-none');
+                    btnAgregar.disabled = true;
+                    btnAgregar.classList.add('disabled');
+                } else {
+                    // El código no existe
+                    advertencia.classList.add('d-none');
+                    btnAgregar.disabled = false;
+                    btnAgregar.classList.remove('disabled');
+                }
+            } catch (error) {
+                console.error('Error verificando código:', error);
+                estadoVerificacion.classList.add('d-none');
+                advertencia.classList.add('d-none');
+                btnAgregar.disabled = false;
+                btnAgregar.classList.remove('disabled');
+            }
+        }, 500); // Debounce de 500ms
+    });
+
+    // Validación del formulario al enviar
+    form.addEventListener('submit', function(e) {
+        const codigo = inputCodigoBarras.value.trim();
+        
+        if (!codigo) {
+            e.preventDefault();
+            alert('Por favor, ingrese un código de barras.');
+            inputCodigoBarras.focus();
+            return false;
+        }
+
+        if (!advertencia.classList.contains('d-none')) {
+            e.preventDefault();
+            alert('No se puede agregar el producto: el código de barras ya existe en el sistema.');
+            inputCodigoBarras.focus();
+            return false;
+        }
+    });
+});
+</script>
 {% endblock %}

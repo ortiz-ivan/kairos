@@ -78,14 +78,48 @@ def productos_list():
 @roles_requeridos("admin")
 def agregar_producto_view():
     if request.method == "POST":
-        agregar_producto(
-            request.form["nombre"],
-            float(request.form["precio"]),
-            int(request.form["stock"]),
-            request.form["categoria"],
-            request.form["codigo_barras"],
+        codigo_barras = request.form["codigo_barras"].strip()
+        nombre = request.form["nombre"].strip()
+
+        # Validar que el código de barras no esté vacío
+        if not codigo_barras:
+            flash("El código de barras no puede estar vacío.", "error")
+            return render_template("agregar_producto.html")
+
+        # Validar que no exista un producto con el mismo código de barras
+        productos_existentes = obtener_productos()
+        codigo_duplicado = any(
+            p["codigo_barras"] == codigo_barras for p in productos_existentes
         )
-        return redirect(url_for("productos.productos_list"))
+
+        if codigo_duplicado:
+            flash(
+                f"Error: Ya existe un producto con el código de barras '{codigo_barras}'.",
+                "error",
+            )
+            return render_template("agregar_producto.html")
+
+        # Validar que el nombre no esté vacío
+        if not nombre:
+            flash("El nombre del producto no puede estar vacío.", "error")
+            return render_template("agregar_producto.html")
+
+        try:
+            agregar_producto(
+                nombre,
+                float(request.form["precio"]),
+                int(request.form["stock"]),
+                request.form["categoria"].strip(),
+                codigo_barras,
+            )
+            flash("Producto agregado correctamente.", "success")
+            return redirect(url_for("productos.productos_list"))
+        except ValueError:
+            flash("Error: Precio y stock deben ser números válidos.", "error")
+            return render_template("agregar_producto.html")
+        except Exception as e:
+            flash(f"Error al agregar producto: {e}", "error")
+            return render_template("agregar_producto.html")
     return render_template("agregar_producto.html")
 
 
