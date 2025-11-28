@@ -6,10 +6,22 @@ from routes.ventas_routes import ventas_bp
 from routes.productos_routes import productos_bp
 from routes.inventario_routes import inventario_bp
 from routes.admin_routes import admin_bp
+from models_alchemy import db
 
 
 def create_app():
     app = Flask(__name__)
+
+    # -------------------------
+    # Configurar SQLAlchemy
+    # -------------------------
+    base_dir = os.path.dirname(__file__)
+    app.config["SQLALCHEMY_DATABASE_URI"] = (
+        f"sqlite:///{os.path.join(base_dir, 'kairos.db')}"
+    )
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    db.init_app(app)
+
     # Leer secret key desde variable de entorno; usar valor por defecto en desarrollo
     secret = os.environ.get("SECRET_KEY")
     is_production = (

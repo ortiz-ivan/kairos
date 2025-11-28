@@ -1,3 +1,13 @@
+"""
+Gestor de migraciones y seeding para la aplicación Kairos.
+
+Uso:
+    flask db init          # Inicializar migraciones (primera vez)
+    flask db migrate -m "message"  # Generar migración
+    flask db upgrade       # Aplicar migraciones
+    flask seed            # Sembrar datos iniciales (admin)
+"""
+
 import os
 from app import create_app
 from werkzeug.security import generate_password_hash
@@ -7,7 +17,7 @@ from flask_migrate import Migrate
 
 
 def get_sqlite_uri():
-    # Usa kairos.db en el directorio del proyecto por defecto
+    """Obtiene la URI de SQLite basada en el directorio del proyecto."""
     base = os.path.dirname(__file__)
     path = os.path.join(base, "kairos.db")
     return f"sqlite:///{path}"
@@ -15,40 +25,40 @@ def get_sqlite_uri():
 
 app = create_app()
 
-# Configurar SQLAlchemy para uso con Flask-Migrate (solo para migraciones/seed)
+# Configurar SQLAlchemy (ya lo hace create_app, pero lo dejamos para claridad)
 app.config.setdefault("SQLALCHEMY_DATABASE_URI", get_sqlite_uri())
 app.config.setdefault("SQLALCHEMY_TRACK_MODIFICATIONS", False)
 
-db.init_app(app)
 migrate = Migrate(app, db)
 
 
 @app.cli.command("seed")
 def seed():
-    """Crea las tablas (si hacen falta) y siembra un usuario admin de ejemplo.
-
-    Usar: `flask seed` (asegúrate de exportar FLASK_APP=manage.py)
-    """
+    """Siembra datos iniciales: crea un usuario admin de prueba."""
     with app.app_context():
+        # Crear todas las tablas si no existen
         db.create_all()
+
+        # Verificar si admin ya existe
         admin = User.query.filter_by(username="admin").first()
         if admin:
             print("Usuario admin ya existe, omitiendo creación.")
             return
+
+        # Crear admin
         pwd = os.environ.get("ADMIN_PASSWORD", "admin123")
-        admin = User(
+        admin_user = User(
             nombre="Administrador",
             username="admin",
             password=generate_password_hash(pwd),
             rol="admin",
         )
-        db.session.add(admin)
+        db.session.add(admin_user)
         db.session.commit()
-        print(
-            "Usuario admin creado. Usuario: admin, contraseña: (ver ADMIN_PASSWORD o 'admin123')"
-        )
+        print("Usuario admin creado.")
+        print(f"  Username: admin")
+        print(f"  Password: {pwd} (o usar ADMIN_PASSWORD)")
 
 
 if __name__ == "__main__":
-    # Ejecutar solo para desarrollo rápido
     app.run(debug=True)

@@ -1,29 +1,26 @@
-from database import get_connection
-from models.producto import obtener_producto_por_id, editar_producto
-from datetime import datetime
+"""Modelo de Venta con SQLAlchemy ORM."""
 
-# ------------------------------
-# FUNCIONES DE VENTAS
-# ------------------------------
+from models_alchemy import db, Venta, DetalleVenta, Producto, User
+from models.producto import obtener_producto_por_id
+from datetime import datetime
 
 
 def registrar_venta(productos_cantidades, usuario_id=None):
+    """Registra una venta con sus detalles y actualiza stock.
+
+    Args:
+        productos_cantidades: lista de dicts [{"id": 1, "cantidad": 2}, ...]
+        usuario_id: ID del usuario que realiza la venta
     """
-    Registra una venta.
-    productos_cantidades: lista de dicts [{"id": 1, "cantidad": 2}, ...]
-    usuario_id: ID del usuario que realiza la venta
-    """
-    conn = get_connection()
-    cursor = conn.cursor()
     try:
         total = 0
 
-        # Calcular total general de la venta
+        # Validar y calcular total
         for item in productos_cantidades:
             producto_id = item["id"]
             cantidad = item["cantidad"]
+            producto = obtener_producto_por_id(producto_id)
 
-            producto = obtener_producto_por_id(producto_id, conn=conn)
             if not producto:
                 raise ValueError(f"Producto con ID {producto_id} no encontrado.")
 
@@ -32,94 +29,82 @@ def registrar_venta(productos_cantidades, usuario_id=None):
                     f"Stock insuficiente para '{producto['nombre']}'. Disponible: {producto['stock']}"
                 )
 
-            subtotal = producto["precio"] * cantidad
-            total += subtotal
+            total += producto["precio"] * cantidad
 
-        # Insertar venta
+        # Crear venta
         fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute(
-            "INSERT INTO ventas (fecha, total, usuario_id) VALUES (?, ?, ?)",
-            (fecha, total, usuario_id),
-        )
-        venta_id = cursor.lastrowid
+        venta = Venta(fecha=fecha, total=total, usuario_id=usuario_id)
+        db.session.add(venta)
+        db.session.flush()  # Obtener el ID de la venta
+        venta_id = venta.id
 
         # Insertar detalles y actualizar stock
         for item in productos_cantidades:
             producto_id = item["id"]
             cantidad = item["cantidad"]
-            producto = obtener_producto_por_id(producto_id, conn=conn)
+            producto = obtener_producto_por_id(producto_id)
             subtotal = producto["precio"] * cantidad
 
-            # Insertar detalle
-            cursor.execute(
-                """
-                INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, subtotal)
-                VALUES (?, ?, ?, ?)
-                """,
-                (venta_id, producto_id, cantidad, subtotal),
+            # Crear detalle de venta
+            detalle = DetalleVenta(
+                venta_id=venta_id,
+                producto_id=producto_id,
+                cantidad=cantidad,
+                subtotal=subtotal,
             )
+            db.session.add(detalle)
 
-            # Actualizar stock sin que baje de 0
-            nuevo_stock = max(producto["stock"] - cantidad, 0)
-            # Actualizar el stock del producto usando la misma conexión
-            resultado = editar_producto(
-                producto_id,
-                producto["nombre"],
-                producto["precio"],
-                nuevo_stock,
-                producto["categoria"],
-                producto["codigo_barras"],
-                conn=conn,
-            )
+            # Actualizar stock del producto
+            prod_obj = Producto.query.get(producto_id)
+            if prod_obj:
+                prod_obj.stock = max(prod_obj.stock - cantidad, 0)
 
-            if not resultado:
-                raise Exception(
-                    f"Error al actualizar el stock del producto {producto['nombre']}"
-                )
-
-        conn.commit()
+        db.session.commit()
         print("Venta registrada y stock actualizado correctamente.")
         return True
 
     except Exception as e:
-        conn.rollback()
+        db.session.rollback()
         print(f"Error al registrar venta: {e}")
         return False
 
-    finally:
-        conn.close()
-
 
 def obtener_ventas():
-    """Devuelve todas las ventas."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT v.id, v.fecha, v.total, v.usuario_id, u.username
-        FROM ventas v
-        LEFT JOIN usuarios u ON v.usuario_id = u.id
-        ORDER BY v.fecha DESC
-    """
+    """Devuelve todas las ventas con información del usuario."""
+    ventas = (
+        db.session.query(Venta, User.username)
+        .outerjoin(User, Venta.usuario_id == User.id)
+        .order_by(Venta.fecha.desc())
+        .all()
     )
-    ventas = cursor.fetchall()
-    conn.close()
-    return ventas
+
+    return [
+        {
+            "id": v[0].id,
+            "fecha": v[0].fecha,
+            "total": v[0].total,
+            "usuario_id": v[0].usuario_id,
+            "username": v[1] or "-",
+        }
+        for v in ventas
+    ]
 
 
 def obtener_detalle_venta(venta_id):
     """Devuelve los productos de una venta específica."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT dv.id, p.nombre, dv.cantidad, dv.subtotal
-        FROM detalle_ventas dv
-        JOIN productos p ON dv.producto_id = p.id
-        WHERE dv.venta_id = ?
-        """,
-        (venta_id,),
+    detalles = (
+        db.session.query(DetalleVenta, Producto.nombre)
+        .join(Producto, DetalleVenta.producto_id == Producto.id)
+        .filter(DetalleVenta.venta_id == venta_id)
+        .all()
     )
-    detalles = cursor.fetchall()
-    conn.close()
-    return detalles
+
+    return [
+        {
+            "id": d[0].id,
+            "nombre": d[1],
+            "cantidad": d[0].cantidad,
+            "subtotal": d[0].subtotal,
+        }
+        for d in detalles
+    ]
