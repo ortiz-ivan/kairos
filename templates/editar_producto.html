@@ -1,29 +1,233 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
-    <h2>Editar Producto</h2>
-    <form method="POST">
-        <div class="mb-3">
-            <label class="form-label">Nombre</label>
-            <input type="text" class="form-control" name="nombre" value="{{ producto['nombre'] }}" required>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="bi bi-pencil-fill"></i> Editar Producto
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" novalidate id="formEditarProducto">
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                name="nombre" 
+                                id="nombre" 
+                                value="{{ producto['nombre'] }}" 
+                                maxlength="100"
+                                required
+                            >
+                            <small class="form-text text-muted">Máximo 100 caracteres</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="precio" class="form-label">Precio (₲)</label>
+                            <input 
+                                type="number" 
+                                step="1" 
+                                min="0.01"
+                                class="form-control" 
+                                name="precio" 
+                                id="precio" 
+                                value="{{ producto['precio'] }}" 
+                                required
+                            >
+                            <small class="form-text text-muted">Debe ser mayor a 0</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="stock" class="form-label">Stock</label>
+                            <input 
+                                type="number" 
+                                min="0"
+                                class="form-control" 
+                                name="stock" 
+                                id="stock" 
+                                value="{{ producto['stock'] }}" 
+                                required
+                            >
+                            <small class="form-text text-muted">Debe ser un número no negativo</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="categoria" class="form-label">Categoría</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                name="categoria" 
+                                id="categoria" 
+                                value="{{ producto['categoria'] }}"
+                                maxlength="50"
+                            >
+                            <small class="form-text text-muted">Máximo 50 caracteres</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="codigo_barras" class="form-label">Código de Barras</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                name="codigo_barras" 
+                                id="codigo_barras" 
+                                value="{{ producto['codigo_barras'] }}"
+                                maxlength="50"
+                                required
+                            >
+                            <small class="form-text text-muted">Código único del producto - Máximo 50 caracteres</small>
+                            <div id="advertenciaCodigoDuplicado" class="alert alert-warning mt-2 d-none" role="alert">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <strong>Advertencia:</strong> Este código de barras ya existe en otro producto.
+                            </div>
+                            <div id="estadoVerificacion" class="alert alert-info mt-2 d-none" role="alert">
+                                <small><i class="bi bi-hourglass-split"></i> Verificando disponibilidad...</small>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-warning" id="btnGuardar">
+                                <i class="bi bi-check-circle"></i> Guardar Cambios
+                            </button>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('productos.productos_list') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Volver a Productos
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Precio</label>
-            <input type="number" step="1" class="form-control" name="precio" value="{{ producto['precio'] }}" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Stock</label>
-            <input type="number" class="form-control" name="stock" value="{{ producto['stock'] }}" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Categoría</label>
-            <input type="text" class="form-control" name="categoria" value="{{ producto['categoria'] }}">
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Código de barras</label>
-            <input type="text" class="form-control" name="codigo_barras" value="{{ producto['codigo_barras'] }}" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-    </form>
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputCodigoBarras = document.getElementById('codigo_barras');
+    const advertencia = document.getElementById('advertenciaCodigoDuplicado');
+    const estadoVerificacion = document.getElementById('estadoVerificacion');
+    const btnGuardar = document.getElementById('btnGuardar');
+    const form = document.getElementById('formEditarProducto');
+    const codigoOriginal = '{{ producto["codigo_barras"] }}';
+    let timerVerificacion;
+
+    // Validar código de barras en tiempo real con debounce
+    inputCodigoBarras.addEventListener('input', function() {
+        const codigo = this.value.trim();
+        
+        clearTimeout(timerVerificacion);
+        
+        // Si es el mismo código original, no mostrar advertencia
+        if (codigo === codigoOriginal) {
+            advertencia.classList.add('d-none');
+            estadoVerificacion.classList.add('d-none');
+            btnGuardar.disabled = false;
+            btnGuardar.classList.remove('disabled');
+            return;
+        }
+        
+        if (!codigo) {
+            advertencia.classList.add('d-none');
+            estadoVerificacion.classList.add('d-none');
+            btnGuardar.disabled = false;
+            btnGuardar.classList.remove('disabled');
+            return;
+        }
+
+        estadoVerificacion.classList.remove('d-none');
+        
+        timerVerificacion = setTimeout(async function() {
+            try {
+                const response = await fetch(`{{ url_for('ventas.buscar_producto', codigo_barras='PLACEHOLDER') }}`.replace('PLACEHOLDER', encodeURIComponent(codigo)));
+                const data = await response.json();
+                
+                estadoVerificacion.classList.add('d-none');
+                
+                if (data.success) {
+                    advertencia.classList.remove('d-none');
+                    btnGuardar.disabled = true;
+                    btnGuardar.classList.add('disabled');
+                } else {
+                    advertencia.classList.add('d-none');
+                    btnGuardar.disabled = false;
+                    btnGuardar.classList.remove('disabled');
+                }
+            } catch (error) {
+                console.error('Error verificando código:', error);
+                estadoVerificacion.classList.add('d-none');
+                advertencia.classList.add('d-none');
+                btnGuardar.disabled = false;
+                btnGuardar.classList.remove('disabled');
+            }
+        }, 500);
+    });
+
+    // Validación del formulario al enviar
+    form.addEventListener('submit', function(e) {
+        const nombre = document.getElementById('nombre').value.trim();
+        const precio = document.getElementById('precio').value.trim();
+        const stock = document.getElementById('stock').value.trim();
+        const codigo = document.getElementById('codigo_barras').value.trim();
+        
+        if (!nombre) {
+            e.preventDefault();
+            alert('Por favor, ingrese un nombre.');
+            document.getElementById('nombre').focus();
+            return false;
+        }
+
+        if (!precio || parseFloat(precio) <= 0) {
+            e.preventDefault();
+            alert('El precio debe ser un número mayor a 0.');
+            document.getElementById('precio').focus();
+            return false;
+        }
+
+        if (!stock || parseInt(stock) < 0) {
+            e.preventDefault();
+            alert('El stock debe ser un número no negativo.');
+            document.getElementById('stock').focus();
+            return false;
+        }
+
+        if (!codigo) {
+            e.preventDefault();
+            alert('Por favor, ingrese un código de barras.');
+            document.getElementById('codigo_barras').focus();
+            return false;
+        }
+
+        if (codigo !== codigoOriginal && !advertencia.classList.contains('d-none')) {
+            e.preventDefault();
+            alert('No se puede guardar: el código de barras ya existe en otro producto.');
+            document.getElementById('codigo_barras').focus();
+            return false;
+        }
+    });
+
+    // Validación en tiempo real de campos numéricos
+    document.getElementById('precio').addEventListener('blur', function() {
+        const valor = parseFloat(this.value);
+        if (this.value && valor <= 0) {
+            this.classList.add('is-invalid');
+        } else {
+            this.classList.remove('is-invalid');
+        }
+    });
+
+    document.getElementById('stock').addEventListener('blur', function() {
+        const valor = parseInt(this.value);
+        if (this.value && valor < 0) {
+            this.classList.add('is-invalid');
+        } else {
+            this.classList.remove('is-invalid');
+        }
+    });
+});
+</script>
 {% endblock %}

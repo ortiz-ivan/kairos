@@ -127,17 +127,102 @@ def agregar_producto_view():
 @login_required
 @roles_requeridos("admin")
 def editar_producto_view(id):
+    """Edita un producto existente con validaciones completas."""
     producto = obtener_producto_por_id(id)
-    if request.method == "POST":
-        editar_producto(
-            id,
-            request.form["nombre"],
-            float(request.form["precio"]),
-            int(request.form["stock"]),
-            request.form["categoria"],
-            request.form["codigo_barras"],
-        )
+
+    # Validar que el producto exista
+    if not producto:
+        flash("Producto no encontrado.", "error")
         return redirect(url_for("productos.productos_list"))
+
+    if request.method == "POST":
+        nombre = request.form["nombre"].strip()
+        precio_str = request.form["precio"].strip()
+        stock_str = request.form["stock"].strip()
+        categoria = request.form["categoria"].strip()
+        codigo_barras = request.form["codigo_barras"].strip()
+
+        # Validar que el nombre no esté vacío
+        if not nombre:
+            flash("El nombre del producto no puede estar vacío.", "error")
+            return render_template("editar_producto.html", producto=producto)
+
+        # Validar longitud del nombre (máximo 100 caracteres)
+        if len(nombre) > 100:
+            flash("El nombre del producto no puede exceder 100 caracteres.", "error")
+            return render_template("editar_producto.html", producto=producto)
+
+        # Validar que el código de barras no esté vacío
+        if not codigo_barras:
+            flash("El código de barras no puede estar vacío.", "error")
+            return render_template("editar_producto.html", producto=producto)
+
+        # Validar longitud del código de barras (máximo 50 caracteres)
+        if len(codigo_barras) > 50:
+            flash("El código de barras no puede exceder 50 caracteres.", "error")
+            return render_template("editar_producto.html", producto=producto)
+
+        # Validar que no exista otro producto con el mismo código (excepto el actual)
+        productos_existentes = obtener_productos()
+        codigo_duplicado = any(
+            p["codigo_barras"] == codigo_barras and p["id"] != id
+            for p in productos_existentes
+        )
+
+        if codigo_duplicado:
+            flash(
+                f"Error: Ya existe otro producto con el código de barras '{codigo_barras}'.",
+                "error",
+            )
+            return render_template("editar_producto.html", producto=producto)
+
+        # Validar precio
+        try:
+            precio = float(precio_str)
+            if precio < 0:
+                flash("El precio no puede ser negativo.", "error")
+                return render_template("editar_producto.html", producto=producto)
+            if precio == 0:
+                flash("El precio debe ser mayor a 0.", "error")
+                return render_template("editar_producto.html", producto=producto)
+        except ValueError:
+            flash("El precio debe ser un número válido.", "error")
+            return render_template("editar_producto.html", producto=producto)
+
+        # Validar stock
+        try:
+            stock = int(stock_str)
+            if stock < 0:
+                flash("El stock no puede ser negativo.", "error")
+                return render_template("editar_producto.html", producto=producto)
+        except ValueError:
+            flash("El stock debe ser un número entero válido.", "error")
+            return render_template("editar_producto.html", producto=producto)
+
+        # Validar categoría (máximo 50 caracteres)
+        if len(categoria) > 50:
+            flash("La categoría no puede exceder 50 caracteres.", "error")
+            return render_template("editar_producto.html", producto=producto)
+
+        try:
+            exito = editar_producto(
+                id,
+                nombre,
+                precio,
+                stock,
+                categoria,
+                codigo_barras,
+            )
+
+            if exito:
+                flash("Producto actualizado correctamente.", "success")
+                return redirect(url_for("productos.productos_list"))
+            else:
+                flash("Error al actualizar el producto.", "error")
+                return render_template("editar_producto.html", producto=producto)
+        except Exception as e:
+            flash(f"Error al actualizar producto: {e}", "error")
+            return render_template("editar_producto.html", producto=producto)
 
     return render_template("editar_producto.html", producto=producto)
 
