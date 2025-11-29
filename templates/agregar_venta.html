@@ -24,9 +24,11 @@
                     <div class="mb-3">
                         <label for="codigo_barras" class="form-label">Código de Barras</label>
                         <input type="text" id="codigo_barras" class="form-control" 
-                               placeholder="Escanee o ingrese el código de barras..." list="sugerencias">
+                               placeholder="Escanee o ingrese el código de barras..." list="sugerencias"
+                               autocomplete="off">
                         <datalist id="sugerencias"></datalist>
-                        <div id="mensaje_error" class="text-danger mt-2" style="display: none;"></div>
+                        <small class="form-text text-muted">Presione Enter para agregar el producto</small>
+                        <div id="mensaje_error" class="alert alert-danger mt-2" style="display: none; margin-bottom: 0;"></div>
                     </div>
 
                     <!-- Formulario principal -->
@@ -52,13 +54,16 @@
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
-                            <h5>Total: <span id="total_venta">₲0</span></h5>
-                            <button type="submit" class="btn btn-success btn-lg">Registrar Venta</button>
+                            <h5>Total: <span id="total_venta" class="text-success">₲0</span></h5>
+                            <button type="submit" class="btn btn-success btn-lg" id="btnRegistrar">Registrar Venta</button>
                         </div>
                     </form>
 
                     <div class="mt-2">
-                        <small class="text-muted">Nota: si un producto excede el stock disponible, no se puede agregar más.</small>
+                        <small class="text-muted">
+                            <strong>Instrucciones:</strong> Escanee o ingrese códigos de barras y presione Enter. 
+                            Ajuste cantidades según sea necesario. El sistema validará stock automáticamente.
+                        </small>
                     </div>
 
                 </div>
@@ -76,6 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const mensajeError = document.getElementById("mensaje_error");
     const formVenta = document.getElementById("form_venta");
     const inputProductos = document.getElementById("productos_input");
+    const btnRegistrar = formVenta.querySelector("button[type='submit']");
 
     let productosAgregados = {};
 
@@ -107,65 +113,104 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "Enter") {
             e.preventDefault();
             const codigo = inputCodigo.value.trim();
-            if (!codigo) return;
+            
+            // Validación: código no vacío
+            if (!codigo) {
+                mensajeError.textContent = "Por favor, ingrese un código de barras.";
+                mensajeError.style.display = "block";
+                return;
+            }
 
             try {
-                const resp = await fetch(`/ventas/buscar/${codigo}`);
+                const resp = await fetch(`/ventas/buscar/${encodeURIComponent(codigo)}`);
                 const data = await resp.json();
 
                 if (data.success) {
                     const p = data.producto;
 
+                    // Validación: stock disponible
+                    if (p.stock <= 0) {
+                        mensajeError.textContent = `'${p.nombre}' no tiene stock disponible.`;
+                        mensajeError.style.display = "block";
+                        inputCodigo.value = "";
+                        return;
+                    }
+
                     if (productosAgregados[p.id]) {
+                        // Producto ya agregado: incrementar cantidad
                         const prod = productosAgregados[p.id];
                         if (prod.cantidad < p.stock) {
                             prod.cantidad += 1;
                             document.querySelector(`#cantidad_${p.id}`).value = prod.cantidad;
                             actualizarSubtotal(p.id);
+                            mensajeError.style.display = "none";
                         } else {
-                            alert("No hay suficiente stock disponible.");
+                            mensajeError.textContent = `No hay suficiente stock para '${p.nombre}'. Disponible: ${p.stock}`;
+                            mensajeError.style.display = "block";
                         }
                     } else {
+                        // Producto nuevo: agregarlo a la tabla
                         productosAgregados[p.id] = { ...p, cantidad: 1 };
                         const fila = document.createElement("tr");
+                        fila.id = `fila_${p.id}`;
                         fila.innerHTML = `
                             <td>${p.codigo_barras}</td>
                             <td>${p.nombre}</td>
                             <td>₲${p.precio.toLocaleString()}</td>
                             <td>
                                 <input type="number" name="cantidad_${p.id}" id="cantidad_${p.id}" class="form-control cantidad"
-                                       value="1" min="1" max="${p.stock}">
+                                       value="1" min="1" max="${p.stock}" required>
+                                <small class="form-text text-muted">Máx: ${p.stock} disponibles</small>
                             </td>
                             <td id="subtotal_${p.id}">₲${p.precio.toLocaleString()}</td>
-                            <td><button type="button" class="btn btn-danger btn-sm eliminar" data-id="${p.id}">&times;</button></td>
+                            <td><button type="button" class="btn btn-danger btn-sm eliminar" data-id="${p.id}" title="Eliminar producto">&times;</button></td>
                         `;
                         tablaBody.appendChild(fila);
+                        mensajeError.style.display = "none";
                     }
 
-                    mensajeError.style.display = "none";
                     inputCodigo.value = "";
+                    inputCodigo.focus();
                     recalcularTotal();
+                    actualizarEstadoBoton();
                 } else {
                     mensajeError.textContent = data.mensaje || "Producto no encontrado o código inválido.";
                     mensajeError.style.display = "block";
+                    inputCodigo.value = "";
+                    inputCodigo.focus();
                 }
             } catch (err) {
-                mensajeError.textContent = "Error al conectar con el servidor.";
+                console.error("Error:", err);
+                mensajeError.textContent = "Error al conectar con el servidor. Intente nuevamente.";
                 mensajeError.style.display = "block";
             }
         }
     });
 
-    // ---- Cambiar cantidad ----
+    // ---- Cambiar cantidad con validación ----
     tablaBody.addEventListener("input", (e) => {
         if (e.target.classList.contains("cantidad")) {
-            const id = e.target.id.split("_")[1];
+            const id = parseInt(e.target.id.split("_")[1]);
             let nuevaCantidad = parseInt(e.target.value) || 0;
-            if (nuevaCantidad > productosAgregados[id].stock) {
-                alert("No puedes vender más de lo que hay en stock.");
-                e.target.value = productosAgregados[id].stock;
-                nuevaCantidad = productosAgregados[id].stock;
+            const stockDisponible = productosAgregados[id].stock;
+
+            // Validación: cantidad > 0
+            if (nuevaCantidad <= 0) {
+                e.target.value = 1;
+                nuevaCantidad = 1;
             }
+
+            // Validación: no exceder stock
+            if (nuevaCantidad > stockDisponible) {
+                e.target.classList.add("is-invalid");
+                e.target.title = `Stock máximo: ${stockDisponible}`;
+                nuevaCantidad = stockDisponible;
+                e.target.value = stockDisponible;
+            } else {
+                e.target.classList.remove("is-invalid");
+                e.target.title = "";
+            }
+
             productosAgregados[id].cantidad = nuevaCantidad;
             actualizarSubtotal(id);
         }
@@ -174,10 +219,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // ---- Eliminar producto ----
     tablaBody.addEventListener("click", (e) => {
         if (e.target.classList.contains("eliminar")) {
-            const id = e.target.dataset.id;
+            e.preventDefault();
+            const id = parseInt(e.target.dataset.id);
             delete productosAgregados[id];
-            e.target.closest("tr").remove();
+            document.getElementById(`fila_${id}`).remove();
             recalcularTotal();
+            actualizarEstadoBoton();
+            mensajeError.style.display = "none";
         }
     });
 
@@ -191,26 +239,53 @@ document.addEventListener("DOMContentLoaded", () => {
     function recalcularTotal() {
         let total = 0;
         for (const id in productosAgregados) {
-            total += productosAgregados[id].precio * productosAgregados[id].cantidad;
+            const prod = productosAgregados[id];
+            total += prod.precio * prod.cantidad;
         }
         totalVenta.textContent = `₲${total.toLocaleString()}`;
     }
 
-    // ---- Enviar al backend ----
+    function actualizarEstadoBoton() {
+        const tieneProductos = Object.keys(productosAgregados).length > 0;
+        btnRegistrar.disabled = !tieneProductos;
+        btnRegistrar.title = tieneProductos ? "Registrar venta" : "Debe agregar al menos un producto";
+    }
+
+    // ---- Validación al enviar formulario ----
     formVenta.addEventListener("submit", (e) => {
-        if (Object.keys(productosAgregados).length === 0) {
+        // Validación: al menos un producto
+        const cantidadProductos = Object.keys(productosAgregados).length;
+        if (cantidadProductos === 0) {
             e.preventDefault();
-            alert("No hay productos en la venta.");
+            mensajeError.textContent = "Debe agregar al menos un producto a la venta.";
+            mensajeError.style.display = "block";
+            inputCodigo.focus();
             return;
         }
 
+        // Validación: todas las cantidades son válidas
+        for (const id in productosAgregados) {
+            const prod = productosAgregados[id];
+            if (prod.cantidad <= 0 || prod.cantidad > prod.stock) {
+                e.preventDefault();
+                mensajeError.textContent = `Error en cantidad del producto '${prod.nombre}'. Cantidad debe ser entre 1 y ${prod.stock}.`;
+                mensajeError.style.display = "block";
+                return;
+            }
+        }
+
+        // Preparar datos para envío
         const productosFormateados = Object.values(productosAgregados).map(p => ({
             id: p.id,
             cantidad: p.cantidad
         }));
 
         inputProductos.value = JSON.stringify(productosFormateados);
+        mensajeError.style.display = "none";
     });
+
+    // Estado inicial del botón
+    actualizarEstadoBoton();
 });
 </script>
 {% endblock %}

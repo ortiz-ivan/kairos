@@ -11,22 +11,38 @@ def registrar_venta(productos_cantidades, usuario_id=None):
     Args:
         productos_cantidades: lista de dicts [{"id": 1, "cantidad": 2}, ...]
         usuario_id: ID del usuario que realiza la venta
+
+    Returns:
+        tuple: (exito: bool, mensaje: str)
     """
     try:
+        # Validación adicional: lista no vacía
+        if not productos_cantidades or len(productos_cantidades) == 0:
+            return False, "La venta debe contener al menos un producto."
+
         total = 0
 
         # Validar y calcular total
         for item in productos_cantidades:
-            producto_id = item["id"]
-            cantidad = item["cantidad"]
+            try:
+                producto_id = int(item["id"])
+                cantidad = int(item["cantidad"])
+            except (KeyError, ValueError, TypeError):
+                return False, "Estructura de datos de productos inválida."
+
+            # Validar cantidad
+            if cantidad <= 0:
+                return False, "La cantidad de cada producto debe ser mayor a 0."
+
             producto = obtener_producto_por_id(producto_id)
 
             if not producto:
-                raise ValueError(f"Producto con ID {producto_id} no encontrado.")
+                return False, f"Producto con ID {producto_id} no encontrado."
 
             if producto["stock"] < cantidad:
-                raise ValueError(
-                    f"Stock insuficiente para '{producto['nombre']}'. Disponible: {producto['stock']}"
+                return False, (
+                    f"Stock insuficiente para '{producto['nombre']}'. "
+                    f"Disponible: {producto['stock']}, solicitado: {cantidad}"
                 )
 
             total += producto["precio"] * cantidad
@@ -40,8 +56,8 @@ def registrar_venta(productos_cantidades, usuario_id=None):
 
         # Insertar detalles y actualizar stock
         for item in productos_cantidades:
-            producto_id = item["id"]
-            cantidad = item["cantidad"]
+            producto_id = int(item["id"])
+            cantidad = int(item["cantidad"])
             producto = obtener_producto_por_id(producto_id)
             subtotal = producto["precio"] * cantidad
 
@@ -60,13 +76,11 @@ def registrar_venta(productos_cantidades, usuario_id=None):
                 prod_obj.stock = max(prod_obj.stock - cantidad, 0)
 
         db.session.commit()
-        print("Venta registrada y stock actualizado correctamente.")
-        return True
+        return True, "Venta registrada exitosamente."
 
     except Exception as e:
         db.session.rollback()
-        print(f"Error al registrar venta: {e}")
-        return False
+        return False, str(e)
 
 
 def obtener_ventas():

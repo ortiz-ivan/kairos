@@ -23,24 +23,76 @@ def login_required(f):
 @ventas_bp.route("/agregar", methods=["GET", "POST"])
 @login_required
 def agregar_venta_view():
+    """Registra una venta con validaciones completas."""
     if request.method == "POST":
         productos_json = request.form.get("productos")
-        if productos_json:
+
+        # Validación 1: JSON está presente
+        if not productos_json or productos_json.strip() == "":
+            flash("Debe agregar al menos un producto a la venta.", "error")
+            return redirect(url_for("ventas.agregar_venta_view"))
+
+        try:
+            productos_cantidades = json.loads(productos_json)
+        except json.JSONDecodeError:
+            flash("Error: formato de datos inválido.", "error")
+            return redirect(url_for("ventas.agregar_venta_view"))
+
+        # Validación 2: Lista no está vacía
+        if not productos_cantidades or len(productos_cantidades) == 0:
+            flash("Debe agregar al menos un producto a la venta.", "error")
+            return redirect(url_for("ventas.agregar_venta_view"))
+
+        # Validación 3: Validar estructura de cada item
+        for idx, item in enumerate(productos_cantidades):
+            # Verificar que tenga los campos requeridos
+            if "id" not in item or "cantidad" not in item:
+                flash(f"Error: producto {idx + 1} tiene estructura inválida.", "error")
+                return redirect(url_for("ventas.agregar_venta_view"))
+
             try:
-                productos_cantidades = json.loads(productos_json)
-                exito = registrar_venta(
-                    productos_cantidades, usuario_id=g.usuario["id"]
-                )
+                producto_id = int(item["id"])
+                cantidad = int(item["cantidad"])
+            except (ValueError, TypeError):
                 flash(
-                    (
-                        "Venta registrada correctamente."
-                        if exito
-                        else "Error al registrar la venta."
-                    ),
-                    "success" if exito else "error",
+                    f"Error: producto {idx + 1} tiene ID o cantidad inválida.", "error"
                 )
-            except Exception as e:
-                flash(f"Error procesando venta: {e}", "error")
+                return redirect(url_for("ventas.agregar_venta_view"))
+
+            # Validación 4: Cantidad > 0
+            if cantidad <= 0:
+                flash(
+                    f"Error: la cantidad del producto {idx + 1} debe ser mayor a 0.",
+                    "error",
+                )
+                return redirect(url_for("ventas.agregar_venta_view"))
+
+            # Validación 5: Producto existe
+            from models.producto import obtener_producto_por_id
+
+            producto = obtener_producto_por_id(producto_id)
+            if not producto:
+                flash(f"Error: el producto con ID {producto_id} no existe.", "error")
+                return redirect(url_for("ventas.agregar_venta_view"))
+
+            # Validación 6: Stock disponible
+            if producto["stock"] < cantidad:
+                flash(
+                    f"Stock insuficiente para '{producto['nombre']}'. "
+                    f"Disponible: {producto['stock']}, solicitado: {cantidad}",
+                    "error",
+                )
+                return redirect(url_for("ventas.agregar_venta_view"))
+
+        # Si todas las validaciones pasaron, registrar venta
+        exito, mensaje = registrar_venta(
+            productos_cantidades, usuario_id=g.usuario["id"]
+        )
+
+        if exito:
+            flash("Venta registrada correctamente.", "success")
+        else:
+            flash(f"Error al registrar la venta: {mensaje}", "error")
 
         return redirect(url_for("ventas.agregar_venta_view"))
 

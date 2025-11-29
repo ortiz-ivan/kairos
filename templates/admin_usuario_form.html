@@ -8,7 +8,8 @@
       <h4 class="mb-0">{{ action }} Usuario</h4>
     </div>
     <div class="card-body">
-      <form method="POST">
+      <form method="POST" id="formUsuario">
+        <!-- Nombre completo -->
         <div class="mb-3">
           <label for="nombre" class="form-label">Nombre completo</label>
           <input
@@ -16,23 +17,39 @@
             name="nombre"
             id="nombre"
             class="form-control"
-            value="{{ usuario.nombre if usuario else '' }}"
+            value="{{ form_data.nombre if form_data else (usuario.nombre if usuario else '') }}"
+            maxlength="100"
             required
           >
+          <small class="form-text text-muted" id="nombreInfo">Máximo 100 caracteres</small>
+          <small class="form-text text-danger d-none" id="nombreError"></small>
         </div>
 
+        <!-- Username -->
         <div class="mb-3">
           <label for="username" class="form-label">Nombre de usuario</label>
-          <input
-            type="text"
-            name="username"
-            id="username"
-            class="form-control"
-            value="{{ usuario.username if usuario else '' }}"
-            required
-          >
+          <div class="input-group">
+            <input
+              type="text"
+              name="username"
+              id="username"
+              class="form-control"
+              value="{{ form_data.username if form_data else (usuario.username if usuario else '') }}"
+              minlength="3"
+              maxlength="20"
+              required
+            >
+            <span class="input-group-text d-none" id="usernameStatus">
+              <i class="bi bi-check-circle text-success" id="usernameCheck"></i>
+              <i class="bi bi-exclamation-circle text-warning" id="usernameWarning"></i>
+            </span>
+          </div>
+          <small class="form-text text-muted" id="usernameInfo">3-20 caracteres</small>
+          <small class="form-text text-danger d-none" id="usernameError"></small>
+          <small class="form-text text-warning d-none" id="usernameWarningText">Este nombre de usuario ya está en uso</small>
         </div>
 
+        <!-- Contraseña -->
         <div class="mb-3">
           <label for="password" class="form-label">Contraseña</label>
           <input
@@ -40,18 +57,26 @@
             name="password"
             id="password"
             class="form-control"
+            minlength="6"
             {% if not usuario %}required{% endif %}
           >
-          {% if usuario %}
-            <div class="form-text">Déjalo vacío si no deseas cambiar la contraseña.</div>
-          {% endif %}
+          <small class="form-text text-muted" id="passwordInfo">
+            {% if usuario %}
+              Mínimo 6 caracteres. Déjalo vacío si no deseas cambiar.
+            {% else %}
+              Mínimo 6 caracteres
+            {% endif %}
+          </small>
+          <small class="form-text text-danger d-none" id="passwordError"></small>
         </div>
 
+        <!-- Rol -->
         <div class="mb-3">
           <label for="rol" class="form-label">Rol</label>
           <select name="rol" id="rol" class="form-select" required>
-            <option value="admin" {% if usuario and usuario.rol == 'admin' %}selected{% endif %}>Administrador</option>
-            <option value="usuario" {% if usuario and usuario.rol == 'usuario' %}selected{% endif %}>Usuario</option>
+            <option value="">Seleccionar rol...</option>
+            <option value="admin" {% if form_data and form_data.rol == 'admin' %}selected{% elif usuario and usuario.rol == 'admin' %}selected{% endif %}>Administrador</option>
+            <option value="usuario" {% if form_data and form_data.rol == 'usuario' %}selected{% elif usuario and usuario.rol == 'usuario' %}selected{% endif %}>Usuario</option>
           </select>
         </div>
 
@@ -59,7 +84,7 @@
           <a href="{{ url_for('admin.admin_usuarios') }}" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> Volver
           </a>
-          <button type="submit" class="btn btn-success">
+          <button type="submit" class="btn btn-success" id="btnGuardar">
             <i class="bi bi-check2-circle"></i> Guardar
           </button>
         </div>
@@ -67,4 +92,203 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('formUsuario');
+    const inputNombre = document.getElementById('nombre');
+    const inputUsername = document.getElementById('username');
+    const inputPassword = document.getElementById('password');
+    const inputRol = document.getElementById('rol');
+    const btnGuardar = document.getElementById('btnGuardar');
+    const isEditing = {% if usuario %}true{% else %}false{% endif %};
+    const usernameOriginal = '{{ usuario.username if usuario else "" }}';
+    let timerUsername;
+
+    // Validar nombre en tiempo real
+    inputNombre.addEventListener('input', function() {
+        const nombre = this.value.trim();
+        const nombreError = document.getElementById('nombreError');
+        const nombreInfo = document.getElementById('nombreInfo');
+
+        if (!nombre) {
+            nombreError.textContent = 'El nombre completo es requerido.';
+            nombreError.classList.remove('d-none');
+            nombreInfo.classList.add('d-none');
+            this.classList.add('is-invalid');
+            return;
+        }
+
+        if (nombre.length > 100) {
+            nombreError.textContent = 'Máximo 100 caracteres.';
+            nombreError.classList.remove('d-none');
+            nombreInfo.classList.add('d-none');
+            this.classList.add('is-invalid');
+        } else {
+            nombreError.classList.add('d-none');
+            nombreInfo.classList.remove('d-none');
+            this.classList.remove('is-invalid');
+        }
+    });
+
+    // Validar username en tiempo real con verificación de unicidad
+    inputUsername.addEventListener('input', function() {
+        const username = this.value.trim();
+        const usernameError = document.getElementById('usernameError');
+        const usernameWarningText = document.getElementById('usernameWarningText');
+        const usernameInfo = document.getElementById('usernameInfo');
+        const usernameStatus = document.getElementById('usernameStatus');
+        const usernameCheck = document.getElementById('usernameCheck');
+        const usernameWarning = document.getElementById('usernameWarning');
+
+        clearTimeout(timerUsername);
+
+        // Validar longitud
+        if (!username) {
+            usernameError.textContent = 'El nombre de usuario es requerido.';
+            usernameError.classList.remove('d-none');
+            usernameWarningText.classList.add('d-none');
+            usernameInfo.classList.add('d-none');
+            usernameStatus.classList.add('d-none');
+            this.classList.add('is-invalid');
+            return;
+        }
+
+        if (username.length < 3) {
+            usernameError.textContent = 'Mínimo 3 caracteres.';
+            usernameError.classList.remove('d-none');
+            usernameWarningText.classList.add('d-none');
+            usernameInfo.classList.add('d-none');
+            usernameStatus.classList.add('d-none');
+            this.classList.add('is-invalid');
+            return;
+        }
+
+        if (username.length > 20) {
+            usernameError.textContent = 'Máximo 20 caracteres.';
+            usernameError.classList.remove('d-none');
+            usernameWarningText.classList.add('d-none');
+            usernameInfo.classList.add('d-none');
+            usernameStatus.classList.add('d-none');
+            this.classList.add('is-invalid');
+            return;
+        }
+
+        usernameError.classList.add('d-none');
+        usernameInfo.classList.remove('d-none');
+        this.classList.remove('is-invalid');
+
+        // Si es el mismo username original, no verificar duplicado
+        if (isEditing && username === usernameOriginal) {
+            usernameWarningText.classList.add('d-none');
+            usernameStatus.classList.add('d-none');
+            this.classList.remove('is-invalid');
+            return;
+        }
+
+        // Verificar disponibilidad con debounce
+        usernameStatus.classList.remove('d-none');
+        usernameCheck.classList.add('d-none');
+        usernameWarning.classList.add('d-none');
+
+        timerUsername = setTimeout(async function() {
+            try {
+                const response = await fetch(`/admin/usuarios/verificar/${encodeURIComponent(username)}`);
+                const data = await response.json();
+
+                if (data.disponible) {
+                    usernameWarningText.classList.add('d-none');
+                    usernameCheck.classList.remove('d-none');
+                    usernameWarning.classList.add('d-none');
+                    inputUsername.classList.remove('is-invalid');
+                } else {
+                    usernameWarningText.classList.remove('d-none');
+                    usernameCheck.classList.add('d-none');
+                    usernameWarning.classList.remove('d-none');
+                    inputUsername.classList.add('is-invalid');
+                }
+            } catch (error) {
+                console.error('Error verificando username:', error);
+                usernameStatus.classList.add('d-none');
+            }
+        }, 500); // Debounce de 500ms
+    });
+
+    // Validar contraseña en tiempo real
+    inputPassword.addEventListener('input', function() {
+        const password = this.value;
+        const passwordError = document.getElementById('passwordError');
+        const passwordInfo = document.getElementById('passwordInfo');
+
+        if (password && password.length < 6) {
+            passwordError.textContent = 'Mínimo 6 caracteres.';
+            passwordError.classList.remove('d-none');
+            passwordInfo.classList.add('d-none');
+            this.classList.add('is-invalid');
+        } else {
+            passwordError.classList.add('d-none');
+            passwordInfo.classList.remove('d-none');
+            this.classList.remove('is-invalid');
+        }
+    });
+
+    // Validación del formulario al enviar
+    form.addEventListener('submit', function(e) {
+        const nombre = inputNombre.value.trim();
+        const username = inputUsername.value.trim();
+        const password = inputPassword.value;
+        const rol = inputRol.value;
+
+        let hasErrors = false;
+
+        // Validar nombre
+        if (!nombre) {
+            document.getElementById('nombreError').textContent = 'El nombre completo es requerido.';
+            document.getElementById('nombreError').classList.remove('d-none');
+            inputNombre.classList.add('is-invalid');
+            hasErrors = true;
+        } else if (nombre.length > 100) {
+            document.getElementById('nombreError').textContent = 'Máximo 100 caracteres.';
+            document.getElementById('nombreError').classList.remove('d-none');
+            inputNombre.classList.add('is-invalid');
+            hasErrors = true;
+        }
+
+        // Validar username
+        if (!username) {
+            document.getElementById('usernameError').textContent = 'El nombre de usuario es requerido.';
+            document.getElementById('usernameError').classList.remove('d-none');
+            inputUsername.classList.add('is-invalid');
+            hasErrors = true;
+        } else if (username.length < 3 || username.length > 20) {
+            document.getElementById('usernameError').textContent = 'El nombre de usuario debe tener entre 3 y 20 caracteres.';
+            document.getElementById('usernameError').classList.remove('d-none');
+            inputUsername.classList.add('is-invalid');
+            hasErrors = true;
+        } else if (inputUsername.classList.contains('is-invalid')) {
+            // Si el estado anterior indicó duplicado
+            hasErrors = true;
+        }
+
+        // Validar contraseña (si está rellenada)
+        if (password && password.length < 6) {
+            document.getElementById('passwordError').textContent = 'La contraseña debe tener al menos 6 caracteres.';
+            document.getElementById('passwordError').classList.remove('d-none');
+            inputPassword.classList.add('is-invalid');
+            hasErrors = true;
+        }
+
+        // Validar rol
+        if (!rol) {
+            alert('Por favor, selecciona un rol.');
+            hasErrors = true;
+        }
+
+        if (hasErrors) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
 {% endblock %}
