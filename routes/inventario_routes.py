@@ -2,6 +2,9 @@ from flask import Blueprint, render_template, request, jsonify, flash, redirect,
 from functools import wraps
 from flask import g
 from models.producto import obtener_productos
+from utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 inventario_bp = Blueprint("inventario", __name__, url_prefix="/inventario")
 
@@ -32,6 +35,7 @@ def admin_required(f):
 @login_required
 @admin_required
 def inventario_view():
+    logger.info(f"Admin {g.usuario['username']} accedió a inventario")
     productos_list = obtener_productos()
     categorias = sorted({p["categoria"] for p in productos_list})
     return render_template(
@@ -47,6 +51,7 @@ def inventario_view():
 @admin_required
 def sugerencias_producto():
     q = request.args.get("q", "")
+    logger.debug(f"Búsqueda de producto - Admin: {g.usuario['username']}, Query: {q}")
     productos = obtener_productos()
 
     resultados = [

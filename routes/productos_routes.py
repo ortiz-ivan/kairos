@@ -8,6 +8,9 @@ from models.producto import (
     editar_producto,
     eliminar_producto,
 )
+from utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 productos_bp = Blueprint("productos", __name__, url_prefix="/productos")
 
@@ -40,6 +43,7 @@ def roles_requeridos(*roles):
 @productos_bp.route("/")
 @login_required
 def productos_list():
+    logger.info(f"Usuario {g.usuario['username']} accedió a listado de productos")
     productos = obtener_productos()
 
     # Filtrar por categoría si se proporciona en query string
@@ -112,13 +116,28 @@ def agregar_producto_view():
                 request.form["categoria"].strip(),
                 codigo_barras,
             )
-            flash("Producto agregado correctamente.", "success")
+            mensaje = "Producto agregado correctamente."
+            flash(mensaje, "success")
+            logger.info(
+                f"Producto agregado - Usuario: {g.usuario['username']}, "
+                f"Nombre: {nombre}, Código: {codigo_barras}"
+            )
             return redirect(url_for("productos.productos_list"))
-        except ValueError:
-            flash("Error: Precio y stock deben ser números válidos.", "error")
+        except ValueError as e:
+            mensaje = "Error: Precio y stock deben ser números válidos."
+            flash(mensaje, "error")
+            logger.error(
+                f"Error de validación al agregar producto - Usuario: {g.usuario['username']}, "
+                f"Nombre: {nombre}: {e}"
+            )
             return render_template("agregar_producto.html")
         except Exception as e:
-            flash(f"Error al agregar producto: {e}", "error")
+            mensaje = f"Error al agregar producto: {e}"
+            flash(mensaje, "error")
+            logger.error(
+                f"Error al agregar producto - Usuario: {g.usuario['username']}, "
+                f"Nombre: {nombre}: {e}"
+            )
             return render_template("agregar_producto.html")
     return render_template("agregar_producto.html")
 
@@ -147,9 +166,9 @@ def editar_producto_view(id):
             flash("El nombre del producto no puede estar vacío.", "error")
             return render_template("editar_producto.html", producto=producto)
 
-        # Validar longitud del nombre (máximo 100 caracteres)
-        if len(nombre) > 100:
-            flash("El nombre del producto no puede exceder 100 caracteres.", "error")
+        # Validar longitud del nombre (máximo 20 caracteres)
+        if len(nombre) > 20:
+            flash("El nombre del producto no puede exceder 20 caracteres.", "error")
             return render_template("editar_producto.html", producto=producto)
 
         # Validar que el código de barras no esté vacío
@@ -215,13 +234,26 @@ def editar_producto_view(id):
             )
 
             if exito:
-                flash("Producto actualizado correctamente.", "success")
+                mensaje = "Producto actualizado correctamente."
+                flash(mensaje, "success")
+                logger.info(
+                    f"Producto editado - Usuario: {g.usuario['username']}, "
+                    f"ID: {id}, Nombre: {nombre}, Código: {codigo_barras}"
+                )
                 return redirect(url_for("productos.productos_list"))
             else:
                 flash("Error al actualizar el producto.", "error")
+                logger.error(
+                    f"Fallo al editar producto - Usuario: {g.usuario['username']}, "
+                    f"ID: {id}, Nombre: {nombre}"
+                )
                 return render_template("editar_producto.html", producto=producto)
         except Exception as e:
             flash(f"Error al actualizar producto: {e}", "error")
+            logger.error(
+                f"Error al editar producto - Usuario: {g.usuario['username']}, "
+                f"ID: {id}, Nombre: {nombre}: {e}"
+            )
             return render_template("editar_producto.html", producto=producto)
 
     return render_template("editar_producto.html", producto=producto)
@@ -231,5 +263,12 @@ def editar_producto_view(id):
 @login_required
 @roles_requeridos("admin")
 def eliminar_producto_view(id):
-    eliminar_producto(id)
+    producto = obtener_producto_por_id(id)
+    if producto:
+        nombre = producto["nombre"]
+        eliminar_producto(id)
+        logger.info(
+            f"Producto eliminado - Usuario: {g.usuario['username']}, "
+            f"ID: {id}, Nombre: {nombre}"
+        )
     return redirect(url_for("productos.productos_list"))

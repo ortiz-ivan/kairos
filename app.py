@@ -7,6 +7,7 @@ from routes.productos_routes import productos_bp
 from routes.inventario_routes import inventario_bp
 from routes.admin_routes import admin_bp
 from models_alchemy import db
+from utils import setup_logging, get_logger, register_error_handlers
 
 
 def create_app():
@@ -66,6 +67,13 @@ def create_app():
     # -------------------------
     # Ruta raíz
     # -------------------------
+    # -------------------------
+    # Configurar Logging y Error Handlers
+    # -------------------------
+    logger = setup_logging(app)
+    logger.info("=== Iniciando aplicación Kairos ===")
+    register_error_handlers(app)
+
     @app.route("/")
     def index():
         """Redirige según autenticación: si está logueado va a ventas, sino a login."""

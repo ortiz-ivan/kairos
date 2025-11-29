@@ -39,18 +39,18 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint.startswith('productos') %}active{% endif %}" href="{{ url_for('productos.productos_list') }}">Productos</a>
+                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('productos') %}active{% endif %}" href="{{ url_for('productos.productos_list') }}">Productos</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint.startswith('ventas') %}active{% endif %}" href="{{ url_for('ventas.listado_ventas') }}">Ventas</a>
+                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('ventas') %}active{% endif %}" href="{{ url_for('ventas.listado_ventas') }}">Ventas</a>
                     </li>
 
                     {% if session.get('rol') == 'admin' %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint.startswith('inventario') %}active{% endif %}" href="{{ url_for('inventario.inventario_view') }}">Inventario</a>
+                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('inventario') %}active{% endif %}" href="{{ url_for('inventario.inventario_view') }}">Inventario</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint.startswith('admin') %}active{% endif %}"
+                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}"
                            href="{{ url_for('admin.admin_usuarios') }}">
                             Panel Admin
                         </a>

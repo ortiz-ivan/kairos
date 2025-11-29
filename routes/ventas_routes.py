@@ -4,7 +4,9 @@ from flask import g
 import json
 from models.venta import registrar_venta, obtener_ventas, obtener_detalle_venta
 from models.producto import obtener_producto_por_codigo
+from utils.logging_config import get_logger
 
+logger = get_logger(__name__)
 ventas_bp = Blueprint("ventas", __name__, url_prefix="/ventas")
 
 
@@ -90,8 +92,16 @@ def agregar_venta_view():
         )
 
         if exito:
+            cantidad_productos = len(productos_cantidades)
+            logger.info(
+                f"Venta registrada - Usuario: {g.usuario['username']}, "
+                f"Productos: {cantidad_productos}, Mensaje: {mensaje}"
+            )
             flash("Venta registrada correctamente.", "success")
         else:
+            logger.error(
+                f"Fallo al registrar venta para usuario {g.usuario['username']}: {mensaje}"
+            )
             flash(f"Error al registrar la venta: {mensaje}", "error")
 
         return redirect(url_for("ventas.agregar_venta_view"))
@@ -104,13 +114,22 @@ def agregar_venta_view():
 def buscar_producto(codigo_barras):
     producto = obtener_producto_por_codigo(codigo_barras)
     if producto:
+        logger.debug(
+            f"Producto encontrado - Usuario: {g.usuario['username']}, "
+            f"Código: {codigo_barras}, ID: {producto['id']}"
+        )
         return jsonify({"success": True, "producto": producto})
+    logger.debug(
+        f"Producto no encontrado - Usuario: {g.usuario['username']}, "
+        f"Código: {codigo_barras}"
+    )
     return jsonify({"success": False, "mensaje": "Producto no encontrado"})
 
 
 @ventas_bp.route("/")
 @login_required
 def listado_ventas():
+    logger.info(f"Usuario {g.usuario['username']} accedió a listado de ventas")
     ventas_list = obtener_ventas()
     return render_template(
         "ventas.html",

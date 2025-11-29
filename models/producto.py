@@ -40,7 +40,7 @@ def obtener_productos():
 
 def obtener_producto_por_id(producto_id, conn=None):
     """Devuelve un producto por su ID. Parámetro 'conn' ignorado (compatibilidad legacy)."""
-    producto = Producto.query.get(producto_id)
+    producto = db.session.get(Producto, producto_id)
     if producto:
         return {
             "id": producto.id,
@@ -73,7 +73,7 @@ def editar_producto(
 ):
     """Edita un producto existente. Parámetro 'conn' ignorado (compatibilidad legacy)."""
     try:
-        producto = Producto.query.get(producto_id)
+        producto = db.session.get(Producto, producto_id)
         if not producto:
             return False
         producto.nombre = nombre
@@ -92,7 +92,7 @@ def editar_producto(
 def eliminar_producto(producto_id):
     """Elimina un producto por su ID."""
     try:
-        producto = Producto.query.get(producto_id)
+        producto = db.session.get(Producto, producto_id)
         if producto:
             db.session.delete(producto)
             db.session.commit()

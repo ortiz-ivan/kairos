@@ -30,7 +30,7 @@ def verificar_usuario(username, password):
 
 def obtener_usuario_por_id(user_id):
     """Obtiene un usuario por su ID."""
-    usuario = User.query.get(user_id)
+    usuario = db.session.get(User, user_id)
     if usuario:
         return {
             "id": usuario.id,

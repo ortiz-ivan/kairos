@@ -71,7 +71,7 @@ def registrar_venta(productos_cantidades, usuario_id=None):
             db.session.add(detalle)
 
             # Actualizar stock del producto
-            prod_obj = Producto.query.get(producto_id)
+            prod_obj = db.session.get(Producto, producto_id)
             if prod_obj:
                 prod_obj.stock = max(prod_obj.stock - cantidad, 0)
 

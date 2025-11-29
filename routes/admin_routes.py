@@ -3,6 +3,9 @@ from functools import wraps
 from flask import g
 from werkzeug.security import generate_password_hash, check_password_hash
 from models_alchemy import db, User
+from utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -22,6 +25,7 @@ def admin_required(f):
 @admin_required
 def admin_usuarios():
     """Lista todos los usuarios de la aplicación."""
+    logger.info(f"Admin {g.usuario['username']} accedió a listado de usuarios")
     usuarios = User.query.all()
     # Convertir a dicts para compatibilidad con template
     usuarios_dicts = [
@@ -156,11 +160,20 @@ def admin_usuario_nuevo():
             )
             db.session.add(usuario)
             db.session.commit()
-            flash(f"Usuario '{username}' creado correctamente.", "success")
+            mensaje = f"Usuario '{username}' creado correctamente."
+            flash(mensaje, "success")
+            logger.info(
+                f"Usuario creado - Admin: {g.usuario['username']}, "
+                f"Nuevo usuario: {username}, Rol: {rol}"
+            )
             return redirect(url_for("admin.admin_usuarios"))
         except Exception as e:
             db.session.rollback()
             flash(f"Error al crear usuario: {e}", "error")
+            logger.error(
+                f"Error al crear usuario - Admin: {g.usuario['username']}, "
+                f"Username: {username}: {e}"
+            )
             return render_template(
                 "admin_usuario_form.html",
                 action="Crear",
@@ -175,7 +188,7 @@ def admin_usuario_nuevo():
 @admin_required
 def admin_usuario_editar(id):
     """Edita un usuario existente con validaciones completas."""
-    usuario_orm = User.query.get(id)
+    usuario_orm = db.session.get(User, id)
     if not usuario_orm:
         flash("Usuario no encontrado.", "error")
         return redirect(url_for("admin.admin_usuarios"))
@@ -294,11 +307,20 @@ def admin_usuario_editar(id):
                 usuario_orm.password = generate_password_hash(password)
 
             db.session.commit()
-            flash(f"Usuario '{username}' actualizado correctamente.", "success")
+            mensaje = f"Usuario '{username}' actualizado correctamente."
+            flash(mensaje, "success")
+            logger.info(
+                f"Usuario editado - Admin: {g.usuario['username']}, "
+                f"ID: {id}, Username: {username}, Rol: {rol}"
+            )
             return redirect(url_for("admin.admin_usuarios"))
         except Exception as e:
             db.session.rollback()
             flash(f"Error al actualizar usuario: {e}", "error")
+            logger.error(
+                f"Error al editar usuario - Admin: {g.usuario['username']}, "
+                f"ID: {id}, Username: {username}: {e}"
+            )
             return render_template(
                 "admin_usuario_form.html",
                 action="Editar",
@@ -315,18 +337,27 @@ def admin_usuario_editar(id):
 @admin_required
 def admin_usuario_eliminar(id):
     """Elimina un usuario."""
-    usuario = User.query.get(id)
+    usuario = db.session.get(User, id)
     if not usuario:
         flash("Usuario no encontrado.", "error")
         return redirect(url_for("admin.admin_usuarios"))
 
+    username = usuario.username
     try:
         db.session.delete(usuario)
         db.session.commit()
         flash("Usuario eliminado correctamente.", "success")
+        logger.info(
+            f"Usuario eliminado - Admin: {g.usuario['username']}, "
+            f"ID: {id}, Username: {username}"
+        )
     except Exception as e:
         db.session.rollback()
         flash(f"Error al eliminar usuario: {e}", "error")
+        logger.error(
+            f"Error al eliminar usuario - Admin: {g.usuario['username']}, "
+            f"ID: {id}, Username: {username}: {e}"
+        )
 
     return redirect(url_for("admin.admin_usuarios"))
 
@@ -336,4 +367,9 @@ def admin_usuario_eliminar(id):
 def verificar_username(username):
     """Verifica si un username está disponible (AJAX)."""
     usuario = User.query.filter_by(username=username).first()
-    return jsonify({"disponible": usuario is None})
+    disponible = usuario is None
+    logger.debug(
+        f"Verificación de username - Admin: {g.usuario['username']}, "
+        f"Username: {username}, Disponible: {disponible}"
+    )
+    return jsonify({"disponible": disponible})
