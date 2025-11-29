@@ -23,7 +23,7 @@
                     <!-- Campo de búsqueda por código de barras con datalist -->
                     <div class="mb-3">
                         <label for="codigo_barras" class="form-label">Código de Barras</label>
-                        <input type="text" id="codigo_barras" class="form-control" 
+                        <input type="text" id="codigo_barras" class="form-control"
                                placeholder="Escanee o ingrese el código de barras..." list="sugerencias"
                                autocomplete="off">
                         <datalist id="sugerencias"></datalist>
@@ -61,7 +61,7 @@
 
                     <div class="mt-2">
                         <small class="text-muted">
-                            <strong>Instrucciones:</strong> Escanee o ingrese códigos de barras y presione Enter. 
+                            <strong>Instrucciones:</strong> Escanee o ingrese códigos de barras y presione Enter.
                             Ajuste cantidades según sea necesario. El sistema validará stock automáticamente.
                         </small>
                     </div>
@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "Enter") {
             e.preventDefault();
             const codigo = inputCodigo.value.trim();
-            
+
             // Validación: código no vacío
             if (!codigo) {
                 mensajeError.textContent = "Por favor, ingrese un código de barras.";

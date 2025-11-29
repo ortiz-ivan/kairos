@@ -9,11 +9,12 @@ Uso:
 """
 
 import os
-from app import create_app
+
+from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash
 
-from models_alchemy import db, User
-from flask_migrate import Migrate
+from app import create_app
+from models_alchemy import User, db
 
 
 def get_sqlite_uri():
@@ -40,7 +41,10 @@ def seed():
         db.create_all()
 
         # Verificar si admin ya existe
-        admin = User.query.filter_by(username="admin").first()
+        from sqlalchemy import select
+
+        stmt = select(User).where(User.username == "admin")
+        admin = db.session.execute(stmt).scalars().first()
         if admin:
             print("Usuario admin ya existe, omitiendo creación.")
             return
@@ -56,7 +60,7 @@ def seed():
         db.session.add(admin_user)
         db.session.commit()
         print("Usuario admin creado.")
-        print(f"  Username: admin")
+        print("  Username: admin")
         print(f"  Password: {pwd} (o usar ADMIN_PASSWORD)")
 
 

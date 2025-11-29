@@ -1,8 +1,9 @@
 """Modelo de Venta con SQLAlchemy ORM."""
 
-from models_alchemy import db, Venta, DetalleVenta, Producto, User
-from models.producto import obtener_producto_por_id
 from datetime import datetime
+
+from models.producto import obtener_producto_por_id
+from models_alchemy import DetalleVenta, Producto, User, Venta, db
 
 
 def registrar_venta(productos_cantidades, usuario_id=None):
@@ -85,12 +86,14 @@ def registrar_venta(productos_cantidades, usuario_id=None):
 
 def obtener_ventas():
     """Devuelve todas las ventas con información del usuario."""
-    ventas = (
-        db.session.query(Venta, User.username)
+    from sqlalchemy import desc, select
+
+    stmt = (
+        select(Venta, User.username)
         .outerjoin(User, Venta.usuario_id == User.id)
-        .order_by(Venta.fecha.desc())
-        .all()
+        .order_by(desc(Venta.fecha))
     )
+    ventas = db.session.execute(stmt).all()
 
     return [
         {
@@ -106,12 +109,14 @@ def obtener_ventas():
 
 def obtener_detalle_venta(venta_id):
     """Devuelve los productos de una venta específica."""
-    detalles = (
-        db.session.query(DetalleVenta, Producto.nombre)
+    from sqlalchemy import select
+
+    stmt = (
+        select(DetalleVenta, Producto.nombre)
         .join(Producto, DetalleVenta.producto_id == Producto.id)
-        .filter(DetalleVenta.venta_id == venta_id)
-        .all()
+        .where(DetalleVenta.venta_id == venta_id)
     )
+    detalles = db.session.execute(stmt).all()
 
     return [
         {

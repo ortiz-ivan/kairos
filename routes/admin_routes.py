@@ -1,8 +1,18 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from functools import wraps
-from flask import g
-from werkzeug.security import generate_password_hash, check_password_hash
-from models_alchemy import db, User
+
+from flask import (
+    Blueprint,
+    flash,
+    g,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
+from werkzeug.security import generate_password_hash
+
+from models_alchemy import User, db
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -25,8 +35,11 @@ def admin_required(f):
 @admin_required
 def admin_usuarios():
     """Lista todos los usuarios de la aplicación."""
+    from sqlalchemy import select
+
     logger.info(f"Admin {g.usuario['username']} accedió a listado de usuarios")
-    usuarios = User.query.all()
+    stmt = select(User)
+    usuarios = db.session.execute(stmt).scalars().all()
     # Convertir a dicts para compatibilidad con template
     usuarios_dicts = [
         {
@@ -104,7 +117,10 @@ def admin_usuario_nuevo():
             )
 
         # 6. Username - unicidad
-        usuario_existente = User.query.filter_by(username=username).first()
+        from sqlalchemy import select
+
+        stmt = select(User).where(User.username == username)
+        usuario_existente = db.session.execute(stmt).scalars().first()
         if usuario_existente:
             flash(
                 f"El nombre de usuario '{username}' ya está en uso. Por favor, elige otro.",
@@ -263,7 +279,10 @@ def admin_usuario_editar(id):
 
         # 6. Username - unicidad (permitir el mismo username actual)
         if username != username_original:
-            usuario_existente = User.query.filter_by(username=username).first()
+            from sqlalchemy import select
+
+            stmt = select(User).where(User.username == username)
+            usuario_existente = db.session.execute(stmt).scalars().first()
             if usuario_existente:
                 flash(
                     f"El nombre de usuario '{username}' ya está en uso. Por favor, elige otro.",
@@ -366,7 +385,10 @@ def admin_usuario_eliminar(id):
 @admin_required
 def verificar_username(username):
     """Verifica si un username está disponible (AJAX)."""
-    usuario = User.query.filter_by(username=username).first()
+    from sqlalchemy import select
+
+    stmt = select(User).where(User.username == username)
+    usuario = db.session.execute(stmt).scalars().first()
     disponible = usuario is None
     logger.debug(
         f"Verificación de username - Admin: {g.usuario['username']}, "

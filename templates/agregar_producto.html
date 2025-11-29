@@ -71,10 +71,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validar código de barras en tiempo real con debounce
     inputCodigoBarras.addEventListener('input', function() {
         const codigo = this.value.trim();
-        
+
         // Limpiar timer anterior
         clearTimeout(timerVerificacion);
-        
+
         if (!codigo) {
             advertencia.classList.add('d-none');
             estadoVerificacion.classList.add('d-none');
@@ -85,16 +85,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Mostrar estado de verificación
         estadoVerificacion.classList.remove('d-none');
-        
+
         // Esperar a que el usuario deje de escribir (debounce)
         timerVerificacion = setTimeout(async function() {
             try {
                 // Verificar si el código existe usando el endpoint de búsqueda
                 const response = await fetch(`{{ url_for('ventas.buscar_producto', codigo_barras='PLACEHOLDER') }}`.replace('PLACEHOLDER', encodeURIComponent(codigo)));
                 const data = await response.json();
-                
+
                 estadoVerificacion.classList.add('d-none');
-                
+
                 if (data.success) {
                     // El código existe
                     advertencia.classList.remove('d-none');
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validación del formulario al enviar
     form.addEventListener('submit', function(e) {
         const codigo = inputCodigoBarras.value.trim();
-        
+
         if (!codigo) {
             e.preventDefault();
             alert('Por favor, ingrese un código de barras.');

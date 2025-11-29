@@ -1,9 +1,19 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from functools import wraps
-from flask import g
 import json
-from models.venta import registrar_venta, obtener_ventas, obtener_detalle_venta
+from functools import wraps
+
+from flask import (
+    Blueprint,
+    flash,
+    g,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
+
 from models.producto import obtener_producto_por_codigo
+from models.venta import obtener_detalle_venta, obtener_ventas, registrar_venta
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)

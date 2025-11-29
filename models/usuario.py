@@ -1,7 +1,8 @@
 """Modelo de Usuario con SQLAlchemy ORM."""
 
-from werkzeug.security import generate_password_hash, check_password_hash
-from models_alchemy import db, User
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from models_alchemy import User, db
 
 
 def crear_usuario(username, password, rol, nombre=None):
@@ -15,7 +16,10 @@ def crear_usuario(username, password, rol, nombre=None):
 
 def verificar_usuario(username, password):
     """Verifica credenciales y devuelve el usuario si es válido."""
-    usuario = User.query.filter_by(username=username).first()
+    from sqlalchemy import select
+
+    stmt = select(User).where(User.username == username)
+    usuario = db.session.execute(stmt).scalars().first()
     if usuario and check_password_hash(usuario.password, password):
         # Retornar como dict para compatibilidad con código legacy
         return {

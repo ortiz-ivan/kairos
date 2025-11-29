@@ -1,21 +1,21 @@
 import os
 import sys
+
 import pytest
 from flask import Flask
 
 # Asegurar que el proyecto esté en sys.path para imports en tests
 sys.path.insert(0, os.getcwd())
 
-from models_alchemy import db as _db
-from utils.logging_config import setup_logging
-from utils.error_handlers import register_error_handlers
-
-# Importar blueprints
-from routes.auth_routes import auth_bp
-from routes.ventas_routes import ventas_bp
-from routes.productos_routes import productos_bp
-from routes.inventario_routes import inventario_bp
-from routes.admin_routes import admin_bp
+# Importar después de insertar en sys.path
+from models_alchemy import db as _db  # noqa: E402
+from routes.admin_routes import admin_bp  # noqa: E402
+from routes.auth_routes import auth_bp  # noqa: E402
+from routes.inventario_routes import inventario_bp  # noqa: E402
+from routes.productos_routes import productos_bp  # noqa: E402
+from routes.ventas_routes import ventas_bp  # noqa: E402
+from utils.error_handlers import register_error_handlers  # noqa: E402
+from utils.logging_config import setup_logging  # noqa: E402
 
 
 def create_test_app(tmp_path):

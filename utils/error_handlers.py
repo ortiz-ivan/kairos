@@ -7,7 +7,8 @@ Proporciona:
 - Respuestas amigables al usuario
 """
 
-from flask import render_template, jsonify
+from flask import render_template
+
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)

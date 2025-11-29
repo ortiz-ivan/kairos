@@ -13,12 +13,12 @@
                     <form method="POST" novalidate id="formEditarProducto">
                         <div class="mb-3">
                             <label for="nombre" class="form-label">Nombre</label>
-                            <input 
-                                type="text" 
-                                class="form-control" 
-                                name="nombre" 
-                                id="nombre" 
-                                value="{{ producto['nombre'] }}" 
+                            <input
+                                type="text"
+                                class="form-control"
+                                name="nombre"
+                                id="nombre"
+                                value="{{ producto['nombre'] }}"
                                 maxlength="100"
                                 required
                             >
@@ -27,14 +27,14 @@
 
                         <div class="mb-3">
                             <label for="precio" class="form-label">Precio (₲)</label>
-                            <input 
-                                type="number" 
-                                step="1" 
+                            <input
+                                type="number"
+                                step="1"
                                 min="0.01"
-                                class="form-control" 
-                                name="precio" 
-                                id="precio" 
-                                value="{{ producto['precio'] }}" 
+                                class="form-control"
+                                name="precio"
+                                id="precio"
+                                value="{{ producto['precio'] }}"
                                 required
                             >
                             <small class="form-text text-muted">Debe ser mayor a 0</small>
@@ -42,13 +42,13 @@
 
                         <div class="mb-3">
                             <label for="stock" class="form-label">Stock</label>
-                            <input 
-                                type="number" 
+                            <input
+                                type="number"
                                 min="0"
-                                class="form-control" 
-                                name="stock" 
-                                id="stock" 
-                                value="{{ producto['stock'] }}" 
+                                class="form-control"
+                                name="stock"
+                                id="stock"
+                                value="{{ producto['stock'] }}"
                                 required
                             >
                             <small class="form-text text-muted">Debe ser un número no negativo</small>
@@ -56,11 +56,11 @@
 
                         <div class="mb-3">
                             <label for="categoria" class="form-label">Categoría</label>
-                            <input 
-                                type="text" 
-                                class="form-control" 
-                                name="categoria" 
-                                id="categoria" 
+                            <input
+                                type="text"
+                                class="form-control"
+                                name="categoria"
+                                id="categoria"
                                 value="{{ producto['categoria'] }}"
                                 maxlength="50"
                             >
@@ -69,11 +69,11 @@
 
                         <div class="mb-3">
                             <label for="codigo_barras" class="form-label">Código de Barras</label>
-                            <input 
-                                type="text" 
-                                class="form-control" 
-                                name="codigo_barras" 
-                                id="codigo_barras" 
+                            <input
+                                type="text"
+                                class="form-control"
+                                name="codigo_barras"
+                                id="codigo_barras"
                                 value="{{ producto['codigo_barras'] }}"
                                 maxlength="50"
                                 required
@@ -119,9 +119,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validar código de barras en tiempo real con debounce
     inputCodigoBarras.addEventListener('input', function() {
         const codigo = this.value.trim();
-        
+
         clearTimeout(timerVerificacion);
-        
+
         // Si es el mismo código original, no mostrar advertencia
         if (codigo === codigoOriginal) {
             advertencia.classList.add('d-none');
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
             btnGuardar.classList.remove('disabled');
             return;
         }
-        
+
         if (!codigo) {
             advertencia.classList.add('d-none');
             estadoVerificacion.classList.add('d-none');
@@ -140,14 +140,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         estadoVerificacion.classList.remove('d-none');
-        
+
         timerVerificacion = setTimeout(async function() {
             try {
                 const response = await fetch(`{{ url_for('ventas.buscar_producto', codigo_barras='PLACEHOLDER') }}`.replace('PLACEHOLDER', encodeURIComponent(codigo)));
                 const data = await response.json();
-                
+
                 estadoVerificacion.classList.add('d-none');
-                
+
                 if (data.success) {
                     advertencia.classList.remove('d-none');
                     btnGuardar.disabled = true;
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const precio = document.getElementById('precio').value.trim();
         const stock = document.getElementById('stock').value.trim();
         const codigo = document.getElementById('codigo_barras').value.trim();
-        
+
         if (!nombre) {
             e.preventDefault();
             alert('Por favor, ingrese un nombre.');

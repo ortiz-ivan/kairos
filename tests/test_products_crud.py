@@ -1,10 +1,9 @@
-import os
 from models.producto import (
     agregar_producto,
-    obtener_productos,
-    obtener_producto_por_id,
     editar_producto,
     eliminar_producto,
+    obtener_producto_por_id,
+    obtener_productos,
 )
 
 

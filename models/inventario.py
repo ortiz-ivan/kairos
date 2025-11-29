@@ -1,11 +1,14 @@
 """Modelo de Inventario con SQLAlchemy ORM."""
 
-from models_alchemy import db, Producto
+from models_alchemy import Producto, db
 
 
 def obtener_inventario():
     """Devuelve todos los productos con su stock actual."""
-    productos = Producto.query.order_by(Producto.nombre).all()
+    from sqlalchemy import asc, select
+
+    stmt = select(Producto).order_by(asc(Producto.nombre))
+    productos = db.session.execute(stmt).scalars().all()
     return [
         {
             "id": p.id,
@@ -21,9 +24,12 @@ def obtener_inventario():
 
 def obtener_stock_bajo(limite=5):
     """Devuelve productos con stock menor o igual al límite."""
-    productos = (
-        Producto.query.filter(Producto.stock <= limite).order_by(Producto.nombre).all()
+    from sqlalchemy import asc, select
+
+    stmt = (
+        select(Producto).where(Producto.stock <= limite).order_by(asc(Producto.nombre))
     )
+    productos = db.session.execute(stmt).scalars().all()
     return [
         {
             "id": p.id,

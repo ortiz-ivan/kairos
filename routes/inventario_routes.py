@@ -1,6 +1,16 @@
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 from functools import wraps
-from flask import g
+
+from flask import (
+    Blueprint,
+    flash,
+    g,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
+
 from models.producto import obtener_productos
 from utils.logging_config import get_logger
 

@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+
 from models.usuario import verificar_usuario
 from utils.logging_config import get_logger
 

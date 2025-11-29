@@ -1,3 +1,11 @@
 Flask==2.3.3
 Flask-SQLAlchemy==3.0.5
 Flask-Migrate==4.0.4
+SQLAlchemy==2.0.30
+pytest==8.1.1
+pytest-cov==4.1.0
+black==23.12.1
+flake8==6.1.0
+isort==5.13.2
+mypy==1.7.1
+pre-commit==3.5.0

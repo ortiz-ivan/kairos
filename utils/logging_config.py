@@ -11,7 +11,6 @@ Proporciona:
 import logging
 import logging.handlers
 import os
-from datetime import datetime
 
 
 def setup_logging(app):

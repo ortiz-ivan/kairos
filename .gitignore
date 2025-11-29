@@ -21,3 +21,11 @@ ENV/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Coverage reports
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Pre-commit cache
+.pre-commit/

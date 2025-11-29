@@ -1,13 +1,15 @@
 import os
-from flask import Flask, session, g, redirect, url_for, request
+
+from flask import Flask, g, redirect, request, session, url_for
+
 from models.usuario import obtener_usuario_por_id
-from routes.auth_routes import auth_bp
-from routes.ventas_routes import ventas_bp
-from routes.productos_routes import productos_bp
-from routes.inventario_routes import inventario_bp
-from routes.admin_routes import admin_bp
 from models_alchemy import db
-from utils import setup_logging, get_logger, register_error_handlers
+from routes.admin_routes import admin_bp
+from routes.auth_routes import auth_bp
+from routes.inventario_routes import inventario_bp
+from routes.productos_routes import productos_bp
+from routes.ventas_routes import ventas_bp
+from utils import register_error_handlers, setup_logging
 
 
 def create_app():
@@ -17,9 +19,9 @@ def create_app():
     # Configurar SQLAlchemy
     # -------------------------
     base_dir = os.path.dirname(__file__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = (
-        f"sqlite:///{os.path.join(base_dir, 'kairos.db')}"
-    )
+    app.config[
+        "SQLALCHEMY_DATABASE_URI"
+    ] = f"sqlite:///{os.path.join(base_dir, 'kairos.db')}"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
 

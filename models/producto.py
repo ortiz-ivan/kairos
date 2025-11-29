@@ -1,6 +1,6 @@
 """Modelo de Producto con SQLAlchemy ORM."""
 
-from models_alchemy import db, Producto
+from models_alchemy import Producto, db
 
 
 def agregar_producto(nombre, precio, stock, categoria, codigo_barras):
@@ -24,7 +24,10 @@ def agregar_producto(nombre, precio, stock, categoria, codigo_barras):
 
 def obtener_productos():
     """Devuelve todos los productos como lista de diccionarios."""
-    productos = Producto.query.all()
+    from sqlalchemy import select
+
+    stmt = select(Producto)
+    productos = db.session.execute(stmt).scalars().all()
     return [
         {
             "id": p.id,
@@ -55,7 +58,10 @@ def obtener_producto_por_id(producto_id, conn=None):
 
 def obtener_producto_por_codigo(codigo_barras):
     """Devuelve un producto por su código de barras."""
-    producto = Producto.query.filter_by(codigo_barras=codigo_barras).first()
+    from sqlalchemy import select
+
+    stmt = select(Producto).where(Producto.codigo_barras == codigo_barras)
+    producto = db.session.execute(stmt).scalars().first()
     if producto:
         return {
             "id": producto.id,

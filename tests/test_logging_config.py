@@ -1,10 +1,12 @@
+import logging
 import os
 import sys
-import logging
+
 from flask import Flask
 
 sys.path.insert(0, os.getcwd())
-from utils.logging_config import setup_logging, get_logger
+
+from utils.logging_config import get_logger, setup_logging  # noqa: E402
 
 
 def test_setup_logging_creates_files(tmp_path, monkeypatch):
@@ -21,6 +23,6 @@ def test_setup_logging_creates_files(tmp_path, monkeypatch):
 
 
 def test_get_logger_namespace():
-    l = get_logger("tests")
-    assert isinstance(l, logging.Logger)
-    assert l.name.startswith("kairos.")
+    logger = get_logger("tests")
+    assert isinstance(logger, logging.Logger)
+    assert logger.name.startswith("kairos.")

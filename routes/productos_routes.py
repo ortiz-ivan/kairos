@@ -1,12 +1,13 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
 from functools import wraps
-from flask import g
+
+from flask import Blueprint, flash, g, redirect, render_template, request, url_for
+
 from models.producto import (
-    obtener_productos,
-    obtener_producto_por_id,
     agregar_producto,
     editar_producto,
     eliminar_producto,
+    obtener_producto_por_id,
+    obtener_productos,
 )
 from utils.logging_config import get_logger
 
