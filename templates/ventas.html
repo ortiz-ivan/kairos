@@ -144,7 +144,7 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-search"></i> Aplicar Filtros
                     </button>
-                    <a href="{{ url_for('ventas.listado_ventas') }}" class="btn btn-outline-secondary">
+                    <a href="{{ url_for('registros.listado_registros') }}" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-counterclockwise"></i> Limpiar Filtros
                     </a>
                 </div>
@@ -252,7 +252,7 @@
             <ul class="pagination justify-content-center mt-3">
                 {% if page > 1 %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('ventas.listado_ventas') }}{% if query_string %}?{{ query_string }}&page={{ page-1 }}{% else %}?page={{ page-1 }}{% endif %}">Anterior</a>
+                    <a class="page-link" href="{{ url_for('registros.listado_registros') }}{% if query_string %}?{{ query_string }}&page={{ page-1 }}{% else %}?page={{ page-1 }}{% endif %}">Anterior</a>
                 </li>
                 {% else %}
                 <li class="page-item disabled"><span class="page-link">Anterior</span></li>
@@ -260,13 +260,13 @@
 
                 {% for p in range(1, total_pages+1) %}
                 <li class="page-item {% if p == page %}active{% endif %}">
-                    <a class="page-link" href="{{ url_for('ventas.listado_ventas') }}{% if query_string %}?{{ query_string }}&page={{ p }}{% else %}?page={{ p }}{% endif %}">{{ p }}</a>
+                    <a class="page-link" href="{{ url_for('registros.listado_registros') }}{% if query_string %}?{{ query_string }}&page={{ p }}{% else %}?page={{ p }}{% endif %}">{{ p }}</a>
                 </li>
                 {% endfor %}
 
                 {% if page < total_pages %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('ventas.listado_ventas') }}{% if query_string %}?{{ query_string }}&page={{ page+1 }}{% else %}?page={{ page+1 }}{% endif %}">Siguiente</a>
+                    <a class="page-link" href="{{ url_for('registros.listado_registros') }}{% if query_string %}?{{ query_string }}&page={{ page+1 }}{% else %}?page={{ page+1 }}{% endif %}">Siguiente</a>
                 </li>
                 {% else %}
                 <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
