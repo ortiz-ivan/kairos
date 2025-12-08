@@ -222,6 +222,25 @@ def listado_ventas():
         {v.get("username", "-") for v in ventas_list if v.get("username")}
     )
 
+    # Calcular estadísticas del día
+    from datetime import date, datetime
+
+    hoy = date.today()
+    ventas_hoy = [
+        v
+        for v in ventas_list
+        if datetime.strptime(v["fecha"][:10], "%Y-%m-%d").date() == hoy
+    ]
+
+    estadisticas = {
+        "cantidad_ventas_hoy": len(ventas_hoy),
+        "total_recaudado_hoy": sum(v["total"] for v in ventas_hoy),
+        "venta_mas_grande_hoy": max((v["total"] for v in ventas_hoy), default=0),
+        "promedio_por_venta_hoy": (
+            sum(v["total"] for v in ventas_hoy) / len(ventas_hoy) if ventas_hoy else 0
+        ),
+    }
+
     logger.info(
         f"Listado de ventas - Usuario: {g.usuario['username']}, "
         f"Total: {len(ventas_list)}, Filtradas: {len(ventas_filtradas)}"
@@ -238,4 +257,5 @@ def listado_ventas():
         usuario_filtro=usuario_filtro,
         monto_minimo=monto_minimo,
         usuarios_unicos=usuarios_unicos,
+        estadisticas=estadisticas,
     )
