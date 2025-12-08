@@ -1,5 +1,6 @@
 import json
 from functools import wraps
+from math import ceil
 
 from flask import (
     Blueprint,
@@ -246,9 +247,39 @@ def listado_ventas():
         f"Total: {len(ventas_list)}, Filtradas: {len(ventas_filtradas)}"
     )
 
+    # --- Paginación ---
+    # Parámetros: page (1-indexed) y per_page
+    try:
+        page = int(request.args.get("page", 1))
+        if page < 1:
+            page = 1
+    except (ValueError, TypeError):
+        page = 1
+
+    try:
+        per_page = int(request.args.get("per_page", 10))
+        if per_page <= 0:
+            per_page = 10
+    except (ValueError, TypeError):
+        per_page = 10
+
+    total_items = len(ventas_filtradas)
+    total_pages = ceil(total_items / per_page) if total_items > 0 else 1
+
+    # Ajustar page si excede
+    if page > total_pages:
+        page = total_pages
+
+    start = (page - 1) * per_page
+    end = start + per_page
+    ventas_pagina = ventas_filtradas[start:end]
+
+    # Query params para mantener filtros en los links de paginación
+    query_params = request.args.to_dict()
+
     return render_template(
         "ventas.html",
-        ventas=ventas_filtradas,
+        ventas=ventas_pagina,
         ventas_total=ventas_list,
         obtener_detalle_venta=obtener_detalle_venta,
         search_query=search_query,
@@ -258,4 +289,10 @@ def listado_ventas():
         monto_minimo=monto_minimo,
         usuarios_unicos=usuarios_unicos,
         estadisticas=estadisticas,
+        # Paginación
+        page=page,
+        per_page=per_page,
+        total_pages=total_pages,
+        total_items=total_items,
+        query_params=query_params,
     )
