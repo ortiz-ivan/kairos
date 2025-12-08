@@ -190,21 +190,46 @@
                         </span>
                     </td>
                     <td>
-                        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#productos-{{ venta["id"] }}" aria-expanded="false" aria-controls="productos-{{ venta["id"] }}">
+                        <!-- Botón que abre modal con detalle de productos -->
+                        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#modal-productos-{{ venta["id"] }}">
                             Ver Productos
                         </button>
-                        <div class="collapse mt-2" id="productos-{{ venta["id"] }}">
-                            <ul class="list-group">
-                                {% for detalle in obtener_detalle_venta(venta["id"]) %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>{{ detalle["nombre"] }}</strong><br>
-                                        <small class="text-muted">Cantidad: {{ detalle["cantidad"] }}</small>
+
+                        <!-- Modal por venta -->
+                        <div class="modal fade" id="modal-productos-{{ venta["id"] }}" tabindex="-1" aria-labelledby="modalLabel-{{ venta["id"] }}" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="modalLabel-{{ venta["id"] }}">Detalle de Venta #{{ venta["id"] }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                                     </div>
-                                    <span>₲{{ detalle["subtotal"]|int }}</span>
-                                </li>
-                                {% endfor %}
-                            </ul>
+                                    <div class="modal-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-borderless mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Producto</th>
+                                                        <th class="text-center">Cantidad</th>
+                                                        <th class="text-end">Subtotal (₲)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for detalle in obtener_detalle_venta(venta["id"]) %}
+                                                    <tr>
+                                                        <td>{{ detalle["nombre"] }}</td>
+                                                        <td class="text-center">{{ detalle["cantidad"] }}</td>
+                                                        <td class="text-end">₲{{ detalle["subtotal"]|int }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </td>
                 </tr>
@@ -227,7 +252,7 @@
             <ul class="pagination justify-content-center mt-3">
                 {% if page > 1 %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('ventas.listado_ventas', **query_params, page=page-1) }}">Anterior</a>
+                    <a class="page-link" href="{{ url_for('ventas.listado_ventas') }}{% if query_string %}?{{ query_string }}&page={{ page-1 }}{% else %}?page={{ page-1 }}{% endif %}">Anterior</a>
                 </li>
                 {% else %}
                 <li class="page-item disabled"><span class="page-link">Anterior</span></li>
@@ -235,13 +260,13 @@
 
                 {% for p in range(1, total_pages+1) %}
                 <li class="page-item {% if p == page %}active{% endif %}">
-                    <a class="page-link" href="{{ url_for('ventas.listado_ventas', **query_params, page=p) }}">{{ p }}</a>
+                    <a class="page-link" href="{{ url_for('ventas.listado_ventas') }}{% if query_string %}?{{ query_string }}&page={{ p }}{% else %}?page={{ p }}{% endif %}">{{ p }}</a>
                 </li>
                 {% endfor %}
 
                 {% if page < total_pages %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('ventas.listado_ventas', **query_params, page=page+1) }}">Siguiente</a>
+                    <a class="page-link" href="{{ url_for('ventas.listado_ventas') }}{% if query_string %}?{{ query_string }}&page={{ page+1 }}{% else %}?page={{ page+1 }}{% endif %}">Siguiente</a>
                 </li>
                 {% else %}
                 <li class="page-item disabled"><span class="page-link">Siguiente</span></li>

@@ -1,6 +1,7 @@
 import json
 from functools import wraps
 from math import ceil
+from urllib.parse import urlencode
 
 from flask import (
     Blueprint,
@@ -277,6 +278,12 @@ def listado_ventas():
     # Query params para mantener filtros en los links de paginación
     query_params = request.args.to_dict()
 
+    # Construir query string sin los parámetros de paginación (page, per_page)
+    qp_no_page = {
+        k: v for k, v in query_params.items() if k not in ("page", "per_page")
+    }
+    query_string = urlencode(qp_no_page)
+
     return render_template(
         "ventas.html",
         ventas=ventas_pagina,
@@ -295,4 +302,5 @@ def listado_ventas():
         total_pages=total_pages,
         total_items=total_items,
         query_params=query_params,
+        query_string=query_string,
     )
