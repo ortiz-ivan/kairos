@@ -139,10 +139,103 @@ def buscar_producto(codigo_barras):
 @ventas_bp.route("/")
 @login_required
 def listado_ventas():
+    """Lista ventas con filtros avanzados."""
     logger.info(f"Usuario {g.usuario['username']} accedió a listado de ventas")
+
+    # Obtener todas las ventas
     ventas_list = obtener_ventas()
+
+    # Obtener parámetros de filtro
+    search_query = request.args.get("search", "").strip().lower()
+    fecha_desde = request.args.get("fecha_desde", "").strip()
+    fecha_hasta = request.args.get("fecha_hasta", "").strip()
+    usuario_filtro = request.args.get("usuario", "").strip()
+    monto_minimo = request.args.get("monto_minimo", "").strip()
+
+    # Aplicar filtros
+    ventas_filtradas = ventas_list
+
+    # Búsqueda por ID, usuario o producto
+    if search_query:
+        ventas_filtradas = [
+            v
+            for v in ventas_filtradas
+            if search_query in str(v["id"]).lower()
+            or search_query in v.get("username", "").lower()
+            or any(
+                search_query in detalle.get("nombre", "").lower()
+                for detalle in obtener_detalle_venta(v["id"])
+            )
+        ]
+        logger.debug(
+            f"Búsqueda - Usuario: {g.usuario['username']}, Query: {search_query}, "
+            f"Resultados: {len(ventas_filtradas)}"
+        )
+
+    # Filtro por rango de fechas
+    if fecha_desde:
+        from datetime import datetime
+
+        try:
+            fecha_desde_obj = datetime.strptime(fecha_desde, "%Y-%m-%d")
+            ventas_filtradas = [
+                v
+                for v in ventas_filtradas
+                if datetime.strptime(v["fecha"][:10], "%Y-%m-%d") >= fecha_desde_obj
+            ]
+        except ValueError:
+            pass
+
+    if fecha_hasta:
+        from datetime import datetime
+
+        try:
+            fecha_hasta_obj = datetime.strptime(fecha_hasta, "%Y-%m-%d")
+            ventas_filtradas = [
+                v
+                for v in ventas_filtradas
+                if datetime.strptime(v["fecha"][:10], "%Y-%m-%d") <= fecha_hasta_obj
+            ]
+        except ValueError:
+            pass
+
+    # Filtro por usuario
+    if usuario_filtro:
+        ventas_filtradas = [
+            v
+            for v in ventas_filtradas
+            if usuario_filtro.lower() in v.get("username", "").lower()
+        ]
+
+    # Filtro por monto mínimo
+    if monto_minimo:
+        try:
+            monto_min_num = float(monto_minimo)
+            ventas_filtradas = [
+                v for v in ventas_filtradas if v["total"] >= monto_min_num
+            ]
+        except ValueError:
+            pass
+
+    # Obtener lista única de usuarios para el filtro dropdown
+    usuarios_unicos = sorted(
+        {v.get("username", "-") for v in ventas_list if v.get("username")}
+    )
+
+    logger.info(
+        f"Listado de ventas - Usuario: {g.usuario['username']}, "
+        f"Total: {len(ventas_list)}, Filtradas: {len(ventas_filtradas)}"
+    )
+
     return render_template(
         "ventas.html",
-        ventas=ventas_list,
+        ventas=ventas_filtradas,
+        ventas_total=ventas_list,
         obtener_detalle_venta=obtener_detalle_venta,
+        search_query=search_query,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta,
+        usuario_filtro=usuario_filtro,
+        monto_minimo=monto_minimo,
+        usuarios_unicos=usuarios_unicos,
     )

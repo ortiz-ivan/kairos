@@ -77,8 +77,8 @@ def admin_usuario_nuevo():
             )
 
         # 2. Nombre - longitud máxima
-        if len(nombre) > 100:
-            flash("El nombre no puede exceder 100 caracteres.", "error")
+        if len(nombre) > 20:
+            flash("El nombre no puede exceder 20 caracteres.", "error")
             return render_template(
                 "admin_usuario_form.html",
                 action="Crear",
