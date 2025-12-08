@@ -43,7 +43,7 @@
                         <a class="nav-link {% if request.endpoint == 'productos.productos_list' %}active{% endif %}" href="{{ url_for('productos.productos_list') }}"><i class="bi bi-box"></i> Productos</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'ventas.listado_ventas' %}active{% endif %}" href="{{ url_for('ventas.listado_ventas') }}"><i class="bi bi-file-earmark-text"></i> Registros</a>
+                        <a class="nav-link {% if request.endpoint == 'registros.listado_registros' %}active{% endif %}" href="{{ url_for('registros.listado_registros') }}"><i class="bi bi-file-earmark-text"></i> Registros</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'ventas.agregar_venta_view' %}active{% endif %}" href="{{ url_for('ventas.agregar_venta_view') }}"><i class="bi bi-plus-circle"></i> Ventas</a>

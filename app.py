@@ -8,6 +8,7 @@ from routes.admin_routes import admin_bp
 from routes.auth_routes import auth_bp
 from routes.inventario_routes import inventario_bp
 from routes.productos_routes import productos_bp
+from routes.registros_routes import registros_bp
 from routes.ventas_routes import ventas_bp
 from utils import register_error_handlers, setup_logging
 
@@ -87,6 +88,7 @@ def create_app():
     # Registro de Blueprints
     # -------------------------
     app.register_blueprint(auth_bp)
+    app.register_blueprint(registros_bp)
     app.register_blueprint(ventas_bp)
     app.register_blueprint(productos_bp)
     app.register_blueprint(inventario_bp)
