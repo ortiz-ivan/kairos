@@ -12,7 +12,7 @@ from flask import (
     url_for,
 )
 
-from models.producto import obtener_producto_por_codigo
+from models.producto import obtener_producto_por_codigo, obtener_productos
 from models.venta import registrar_venta
 from utils.logging_config import get_logger
 
@@ -134,3 +134,33 @@ def buscar_producto(codigo_barras):
         f"Código: {codigo_barras}"
     )
     return jsonify({"success": False, "mensaje": "Producto no encontrado"})
+
+
+@ventas_bp.route("/productos/buscar")
+@login_required
+def buscar_productos_nombre():
+    """Busca productos por nombre. Parámetro: ?q=nombre"""
+    q = request.args.get("q", "").strip().lower()
+
+    if not q or len(q) < 2:
+        return jsonify({"productos": []})
+
+    productos = obtener_productos()
+
+    # Filtrar productos por nombre, código de barras o categoría
+    resultados = [
+        p
+        for p in productos
+        if q in p["nombre"].lower()
+        or q in p.get("codigo_barras", "").lower()
+        or q in p.get("categoria", "").lower()
+    ][
+        :20
+    ]  # Limitar a 20 resultados
+
+    logger.debug(
+        f"Búsqueda de productos - Usuario: {g.usuario['username']}, "
+        f"Query: '{q}', Resultados: {len(resultados)}"
+    )
+
+    return jsonify({"productos": resultados})

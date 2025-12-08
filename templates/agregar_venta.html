@@ -20,14 +20,19 @@
                       {% endif %}
                     {% endwith %}
 
-                    <!-- Campo de búsqueda por código de barras con datalist -->
+                    <!-- Campo de búsqueda por código de barras con botón de búsqueda visual -->
                     <div class="mb-3">
                         <label for="codigo_barras" class="form-label">Código de Barras</label>
-                        <input type="text" id="codigo_barras" class="form-control"
-                               placeholder="Escanee o ingrese el código de barras..." list="sugerencias"
-                               autocomplete="off">
+                        <div class="input-group">
+                            <input type="text" id="codigo_barras" class="form-control"
+                                   placeholder="Escanee o ingrese el código de barras..." list="sugerencias"
+                                   autocomplete="off">
+                            <button type="button" class="btn btn-primary" id="btnBuscarModal" title="Buscar producto por nombre">
+                                <i class="bi bi-search"></i> Buscar
+                            </button>
+                        </div>
                         <datalist id="sugerencias"></datalist>
-                        <small class="form-text text-muted">Presione Enter para agregar el producto</small>
+                        <small class="form-text text-muted">Presione Enter para agregar por código, o use el botón Buscar para seleccionar por nombre</small>
                         <div id="mensaje_error" class="alert alert-danger mt-2" style="display: none; margin-bottom: 0;"></div>
                     </div>
 
@@ -287,5 +292,215 @@ document.addEventListener("DOMContentLoaded", () => {
     // Estado inicial del botón
     actualizarEstadoBoton();
 });
+</script>
+
+<!-- Modal de Búsqueda de Productos -->
+<div class="modal fade" id="modalBuscarProducto" tabindex="-1" aria-labelledby="modalBuscarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalBuscarLabel">Buscar Producto por Nombre</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" id="inputBuscarProducto" class="form-control form-control-lg"
+                           placeholder="Ingrese nombre, código o categoría del producto..." autocomplete="off">
+                    <small class="form-text text-muted d-block mt-2">
+                        Comience a escribir para ver productos que coincidan...
+                    </small>
+                </div>
+
+                <!-- Spinner de carga -->
+                <div id="spinnerCargando" class="text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+
+                <!-- Tabla de resultados -->
+                <div class="table-responsive" id="tablaResultadosContainer" style="display: none;">
+                    <table class="table table-hover table-striped align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Código</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaResultados">
+                            <!-- Resultados se cargan aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mensaje cuando no hay resultados -->
+                <div id="sinResultados" class="alert alert-info" style="display: none;">
+                    <i class="bi bi-info-circle"></i> No se encontraron productos que coincidan con la búsqueda.
+                </div>
+
+                <!-- Mensaje inicial -->
+                <div id="mensajeInicial" class="text-center text-muted">
+                    <i class="bi bi-search" style="font-size: 2rem; opacity: 0.5;"></i>
+                    <p class="mt-2">Comience a escribir para buscar productos...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Variables para el modal
+    const modalBuscar = new bootstrap.Modal(document.getElementById("modalBuscarProducto"));
+    const btnBuscarModal = document.getElementById("btnBuscarModal");
+    const inputBuscarProducto = document.getElementById("inputBuscarProducto");
+    const tablaResultados = document.getElementById("tablaResultados");
+    const tablaResultadosContainer = document.getElementById("tablaResultadosContainer");
+    const sinResultados = document.getElementById("sinResultados");
+    const mensajeInicial = document.getElementById("mensajeInicial");
+    const spinnerCargando = document.getElementById("spinnerCargando");
+    let timerBusqueda;
+
+    // Abrir modal
+    btnBuscarModal.addEventListener("click", () => {
+        inputBuscarProducto.value = "";
+        tablaResultados.innerHTML = "";
+        tablaResultadosContainer.style.display = "none";
+        sinResultados.style.display = "none";
+        mensajeInicial.style.display = "block";
+        spinnerCargando.style.display = "none";
+        inputBuscarProducto.focus();
+        modalBuscar.show();
+    });
+
+    // Búsqueda en tiempo real
+    inputBuscarProducto.addEventListener("input", () => {
+        clearTimeout(timerBusqueda);
+        const q = inputBuscarProducto.value.trim();
+
+        if (q.length < 2) {
+            tablaResultados.innerHTML = "";
+            tablaResultadosContainer.style.display = "none";
+            sinResultados.style.display = "none";
+            mensajeInicial.style.display = "block";
+            spinnerCargando.style.display = "none";
+            return;
+        }
+
+        spinnerCargando.style.display = "block";
+        mensajeInicial.style.display = "none";
+
+        timerBusqueda = setTimeout(async () => {
+            try {
+                const response = await fetch(`/ventas/productos/buscar?q=${encodeURIComponent(q)}`);
+                const data = await response.json();
+                spinnerCargando.style.display = "none";
+
+                if (data.productos && data.productos.length > 0) {
+                    tablaResultados.innerHTML = data.productos.map(p => `
+                        <tr>
+                            <td>
+                                <strong>${p.nombre}</strong>
+                            </td>
+                            <td>
+                                <code>${p.codigo_barras}</code>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">${p.categoria}</span>
+                            </td>
+                            <td>
+                                <strong>₲${parseInt(p.precio).toLocaleString('es-ES')}</strong>
+                            </td>
+                            <td>
+                                <span class="badge ${p.stock > 0 ? 'bg-success' : 'bg-danger'}">
+                                    ${p.stock} ${p.stock === 1 ? 'unidad' : 'unidades'}
+                                </span>
+                            </td>
+                            <td>
+                                ${p.stock > 0
+                                    ? `<button type="button" class="btn btn-sm btn-success" onclick="agregarProductoDesdeModal(${p.id}, '${p.nombre}', ${p.precio})">
+                                        <i class="bi bi-plus-circle"></i> Agregar
+                                      </button>`
+                                    : `<button type="button" class="btn btn-sm btn-secondary" disabled>
+                                        Sin stock
+                                      </button>`
+                                }
+                            </td>
+                        </tr>
+                    `).join("");
+                    tablaResultadosContainer.style.display = "block";
+                    sinResultados.style.display = "none";
+                    mensajeInicial.style.display = "none";
+                } else {
+                    tablaResultados.innerHTML = "";
+                    tablaResultadosContainer.style.display = "none";
+                    sinResultados.style.display = "block";
+                    mensajeInicial.style.display = "none";
+                }
+            } catch (error) {
+                console.error("Error en búsqueda:", error);
+                spinnerCargando.style.display = "none";
+                sinResultados.style.display = "block";
+                sinResultados.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error al buscar productos.';
+                mensajeInicial.style.display = "none";
+            }
+        }, 300); // Debounce de 300ms
+    });
+});
+
+// Función global para agregar producto desde el modal
+function agregarProductoDesdeModal(productoId, productoNombre, productioPrecio) {
+    const formVenta = document.getElementById("form_venta");
+    const tablaBody = document.querySelector("#form_venta tbody");
+
+    // Obtener datos del producto (necesitamos hacer otra búsqueda para obtener stock)
+    fetch(`/ventas/productos/buscar?q=${encodeURIComponent(productoNombre)}`)
+        .then(response => response.json())
+        .then(data => {
+            const producto = data.productos.find(p => p.id === productoId);
+            if (producto) {
+                // Usar la función existente del formulario de ventas
+                const existentes = document.querySelectorAll("tbody tr");
+                const yaExiste = Array.from(existentes).some(row => {
+                    const codigo = row.querySelector("td:first-child")?.textContent.trim();
+                    return codigo === producto.codigo_barras;
+                });
+
+                if (yaExiste) {
+                    alert("Este producto ya está agregado. Ajuste la cantidad en la tabla.");
+                    return;
+                }
+
+                // Simular agregar el producto
+                const event = new KeyboardEvent("keypress", {
+                    key: "Enter",
+                    code: "Enter",
+                    keyCode: 13,
+                    which: 13,
+                    bubbles: true
+                });
+
+                // Llenar el input y disparar evento
+                const inputCodigo = document.getElementById("codigo_barras");
+                inputCodigo.value = producto.codigo_barras;
+                inputCodigo.dispatchEvent(event);
+
+                // Cerrar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById("modalBuscarProducto"));
+                if (modal) modal.hide();
+            }
+        })
+        .catch(error => {
+            console.error("Error al obtener producto:", error);
+            alert("Error al agregar el producto.");
+        });
+}
 </script>
 {% endblock %}
