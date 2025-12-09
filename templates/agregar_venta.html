@@ -85,9 +85,27 @@
                             </table>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
-                            <h5>Total: <span id="total_venta" class="text-success">₲0</span></h5>
-                            <button type="submit" class="btn btn-success btn-lg" id="btnRegistrar">Registrar Venta</button>
+                        <!-- Resumen de Total con formato mejorado -->
+                        <div class="card border-success bg-light mt-4 mb-3">
+                            <div class="card-body">
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-md-8">
+                                        <div class="mb-2">
+                                            <small class="text-muted d-block">TOTAL A PAGAR</small>
+                                            <h2 class="mb-0" id="total_venta_grande" style="color: #28a745; font-weight: 700;">₲0</h2>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted d-block">En palabras</small>
+                                            <p class="mb-0" id="total_venta_letras" style="font-size: 0.95rem; font-style: italic; color: #495057;">Cero guaraníes</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-success btn-lg" id="btnRegistrar">
+                                            <i class="bi bi-check-circle"></i> Registrar Venta
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </form>
 
@@ -324,7 +342,54 @@ document.addEventListener("DOMContentLoaded", () => {
             const prod = productosAgregados[id];
             total += prod.precio * prod.cantidad;
         }
-        totalVenta.textContent = `₲${total.toLocaleString()}`;
+        document.getElementById("total_venta_grande").textContent = `₲${total.toLocaleString()}`;
+        document.getElementById("total_venta_letras").textContent = convertirALetras(Math.round(total));
+    }
+
+    // Función para convertir números a letras en guaraní
+    function convertirALetras(num) {
+        if (num === 0) return "Cero guaraníes";
+
+        const unidades = ["", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"];
+        const especiales = ["diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve"];
+        const decenas = ["", "", "veinte", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"];
+        const centenas = ["", "ciento", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecientos"];
+
+        function convertirCientos(n) {
+            if (n === 0) return "";
+            if (n < 10) return unidades[n];
+            if (n < 20) return especiales[n - 10];
+            if (n < 100) {
+                const dec = Math.floor(n / 10);
+                const uni = n % 10;
+                if (uni === 0) return decenas[dec];
+                return decenas[dec] + " y " + unidades[uni];
+            }
+            const cent = Math.floor(n / 100);
+            const resto = n % 100;
+            if (resto === 0) return centenas[cent];
+            return centenas[cent] + " " + convertirCientos(resto);
+        }
+
+        if (num < 1000) {
+            return convertirCientos(num) + " guaraní" + (num !== 1 ? "es" : "");
+        }
+
+        const miles = Math.floor(num / 1000);
+        const resto = num % 1000;
+
+        let resultado = "";
+        if (miles === 1) {
+            resultado = "mil";
+        } else {
+            resultado = convertirCientos(miles) + " mil";
+        }
+
+        if (resto > 0) {
+            resultado += " " + convertirCientos(resto);
+        }
+
+        return resultado + " guaraní" + (num !== 1 ? "es" : "");
     }
 
     function actualizarEstadoBoton() {
