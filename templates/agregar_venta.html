@@ -33,6 +33,33 @@
                         </div>
                         <datalist id="sugerencias"></datalist>
                         <small class="form-text text-muted">Presione Enter para agregar por código, o use el botón Buscar para seleccionar por nombre</small>
+
+                        <!-- Tarjeta informativa de vista previa del producto -->
+                        <div id="previewProducto" class="card mt-3" style="display: none; border-left: 4px solid #198754; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            <div class="card-body py-2 px-3">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">Producto</small>
+                                        <strong id="previewNombre" class="text-dark"></strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted d-block">Precio</small>
+                                        <strong id="previewPrecio" class="text-success"></strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted d-block">Stock</small>
+                                        <strong id="previewStock" class="text-info"></strong>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <small class="text-muted d-block">Categoría</small>
+                                        <span id="previewCategoria" class="badge bg-secondary"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div id="mensaje_error" class="alert alert-danger mt-2" style="display: none; margin-bottom: 0;"></div>
                     </div>
 
@@ -84,11 +111,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const tablaBody = document.querySelector("#form_venta tbody");
     const totalVenta = document.getElementById("total_venta");
     const mensajeError = document.getElementById("mensaje_error");
+    const previewProducto = document.getElementById("previewProducto");
+    const previewNombre = document.getElementById("previewNombre");
+    const previewPrecio = document.getElementById("previewPrecio");
+    const previewStock = document.getElementById("previewStock");
+    const previewCategoria = document.getElementById("previewCategoria");
     const formVenta = document.getElementById("form_venta");
     const inputProductos = document.getElementById("productos_input");
     const btnRegistrar = formVenta.querySelector("button[type='submit']");
 
     let productosAgregados = {};
+    let productoPreview = null;
 
     // ---- Autocompletado de códigos ----
     inputCodigo.addEventListener("input", async () => {
@@ -110,6 +143,50 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         } catch (err) {
             console.error("Error al buscar sugerencias:", err);
+        }
+    });
+
+    // ---- Mostrar vista previa al seleccionar del datalist ----
+    inputCodigo.addEventListener("change", async () => {
+        const codigo = inputCodigo.value.trim();
+        if (!codigo) {
+            previewProducto.style.display = "none";
+            productoPreview = null;
+            return;
+        }
+
+        try {
+            const resp = await fetch(`/ventas/buscar/${encodeURIComponent(codigo)}`);
+            const data = await resp.json();
+
+            if (data.success) {
+                const p = data.producto;
+                productoPreview = p;
+
+                // Actualizar tarjeta de vista previa
+                previewNombre.textContent = p.nombre;
+                previewPrecio.textContent = `₲${p.precio.toLocaleString()}`;
+                previewStock.textContent = `${p.stock} unidad${p.stock !== 1 ? 'es' : ''}`;
+                previewCategoria.textContent = p.categoria;
+
+                // Mostrar tarjeta
+                previewProducto.style.display = "block";
+            } else {
+                previewProducto.style.display = "none";
+                productoPreview = null;
+            }
+        } catch (err) {
+            console.error("Error al obtener vista previa:", err);
+            previewProducto.style.display = "none";
+            productoPreview = null;
+        }
+    });
+
+    // ---- Ocultar vista previa al limpiar el input ----
+    inputCodigo.addEventListener("input", () => {
+        if (inputCodigo.value.trim() === "") {
+            previewProducto.style.display = "none";
+            productoPreview = null;
         }
     });
 
