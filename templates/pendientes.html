@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Ventas Pendientes</h2>
+
+    {% if pendientes and pendientes|length > 0 %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Usuario</th>
+                    <th>Total (₲)</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pendientes %}
+                <tr>
+                    <td>{{ p['id'] }}</td>
+                    <td>{{ p['fecha'] }}</td>
+                    <td>{{ p['usuario_id'] or '-' }}</td>
+                    <td>₲{{ '{:,.0f}'.format(p['total']) }}</td>
+                    <td>
+                        <a href="{{ url_for('ventas.agregar_venta_view') }}?pendiente_id={{ p['id'] }}" class="btn btn-primary btn-sm">Retomar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">No hay ventas pendientes.</div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -98,6 +98,11 @@
                                             <small class="text-muted d-block">En palabras</small>
                                             <p class="mb-0" id="total_venta_letras" style="font-size: 0.95rem; font-style: italic; color: #495057;">Cero guaraníes</p>
                                         </div>
+                                        <div class="form-check form-switch mt-2">
+                                            <input class="form-check-input" type="checkbox" id="checkboxPendiente" name="pendiente" value="1">
+                                            <label class="form-check-label" for="checkboxPendiente">Guardar como venta pendiente</label>
+                                            <small class="d-block text-muted">Si marca, la venta se guardará como pendiente y no descontará stock.</small>
+                                        </div>
                                     </div>
                                     <div class="col-md-4 d-flex justify-content-end">
                                         <button type="submit" class="btn btn-success btn-lg" id="btnRegistrar">
@@ -124,6 +129,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+    const servidorPendiente = {{ pendiente|tojson|default('null') }};
     const inputCodigo = document.getElementById("codigo_barras");
     const datalist = document.getElementById("sugerencias");
     const tablaBody = document.querySelector("#form_venta tbody");
@@ -140,6 +146,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let productosAgregados = {};
     let productoPreview = null;
+
+    // Si la plantilla pasó un pendiente para retomar, cargarlo en la tabla
+    if (servidorPendiente) {
+        try {
+            (servidorPendiente.detalles || []).forEach(d => {
+                productosAgregados[d.id] = {
+                    id: d.id,
+                    nombre: d.nombre,
+                    precio: d.precio || d.precio === 0 ? d.precio : 0,
+                    stock: d.stock || 0,
+                    cantidad: d.cantidad
+                };
+
+                const fila = document.createElement("tr");
+                fila.id = `fila_${d.id}`;
+                fila.innerHTML = `
+                    <td>${d.id}</td>
+                    <td>${d.nombre}</td>
+                    <td>₲${(d.precio||0).toLocaleString()}</td>
+                    <td>
+                        <input type="number" name="cantidad_${d.id}" id="cantidad_${d.id}" class="form-control cantidad"
+                               value="${d.cantidad}" min="1" max="${d.stock || 99999}" required>
+                        <small class="form-text text-muted">Máx: ${d.stock || 'N/A'} disponibles</small>
+                    </td>
+                    <td id="subtotal_${d.id}">₲${(d.subtotal||0).toLocaleString()}</td>
+                    <td><button type="button" class="btn btn-danger btn-sm eliminar" data-id="${d.id}" title="Eliminar producto">&times;</button></td>
+                `;
+                tablaBody.appendChild(fila);
+            });
+
+            // Marcar checkbox pendiente
+            const cb = document.getElementById('checkboxPendiente');
+            if (cb) cb.checked = true;
+
+            recalcularTotal();
+            actualizarEstadoBoton();
+        } catch (err) {
+            console.error('Error al cargar pendiente:', err);
+        }
+    }
 
     // ---- Autocompletado de códigos ----
     inputCodigo.addEventListener("input", async () => {

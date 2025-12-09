@@ -1,5 +1,7 @@
 """Modelo de Venta con SQLAlchemy ORM."""
 
+import json
+import os
 from datetime import datetime
 
 from models.producto import obtener_producto_por_id
@@ -82,6 +84,79 @@ def registrar_venta(productos_cantidades, usuario_id=None):
     except Exception as e:
         db.session.rollback()
         return False, str(e)
+
+
+def _pendientes_file_path():
+    base = os.path.dirname(os.path.dirname(__file__))
+    return os.path.join(base, "pendientes.json")
+
+
+def guardar_pendiente(productos_cantidades, usuario_id=None):
+    """Guarda una venta como pendiente en archivo JSON (no modifica stock)."""
+    try:
+        path = _pendientes_file_path()
+        if not os.path.exists(path):
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump([], fh, ensure_ascii=False)
+
+        with open(path, "r", encoding="utf-8") as fh:
+            pendientes = json.load(fh)
+
+        # Calcular total aproximado (tomando precio actual de productos)
+        total = 0
+        detalles = []
+        for item in productos_cantidades:
+            producto_id = int(item["id"])
+            cantidad = int(item["cantidad"])
+            producto = obtener_producto_por_id(producto_id)
+            precio = producto["precio"] if producto else 0
+            subtotal = precio * cantidad
+            total += subtotal
+            detalles.append(
+                {
+                    "id": producto_id,
+                    "nombre": producto["nombre"] if producto else "-",
+                    "cantidad": cantidad,
+                    "precio": precio,
+                    "subtotal": subtotal,
+                }
+            )
+
+        pendiente = {
+            "id": int(datetime.utcnow().timestamp()),
+            "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "usuario_id": usuario_id,
+            "total": total,
+            "detalles": detalles,
+        }
+
+        pendientes.append(pendiente)
+
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(pendientes, fh, ensure_ascii=False, indent=2)
+
+        return True, "Pendiente guardado exitosamente."
+    except Exception as e:
+        return False, str(e)
+
+
+def obtener_pendientes():
+    path = _pendientes_file_path()
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return []
+
+
+def obtener_pendiente_por_id(pendiente_id):
+    pendientes = obtener_pendientes()
+    for p in pendientes:
+        if str(p.get("id")) == str(pendiente_id):
+            return p
+    return None
 
 
 def obtener_ventas():
