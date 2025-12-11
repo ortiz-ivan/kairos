@@ -30,4 +30,6 @@ htmlcov/
 # Pre-commit cache
 .pre-commit/
 
-.json
+.json/
+
+.env

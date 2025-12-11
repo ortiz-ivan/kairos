@@ -14,11 +14,13 @@ Este documento describe cómo desplegar Kairos en un entorno de producción usan
 ### Archivos de Configuración
 
 1. **config.py**
+
    - Configuración basada en ambiente (Development, Production, Testing)
    - Maneja rutas de base de datos, cookies seguras, niveles de logging
    - Lee variables de entorno y proporciona valores por defecto seguros
 
 2. **wsgi.py**
+
    - Punto de entrada para servidores WSGI (Gunicorn)
    - Exporta la instancia de la app: `app`
    - Comando recomendado:
@@ -27,11 +29,13 @@ Este documento describe cómo desplegar Kairos en un entorno de producción usan
      ```
 
 3. **.env.example**
+
    - Plantilla de variables de entorno
    - Copiar a `.env` y llenar con valores reales
    - **NUNCA** commitear `.env` a control de versiones
 
 4. **Dockerfile**
+
    - Build de imagen Docker multi-stage
    - Imagen base: `python:3.10-slim` (lean, segura)
    - Características:
@@ -41,10 +45,12 @@ Este documento describe cómo desplegar Kairos en un entorno de producción usan
      - Gunicorn pre-configurado (4 workers, 120s timeout)
 
 5. **.dockerignore**
+
    - Excluye archivos innecesarios del build context
-   - Reduce tamaño de imagen: .git, __pycache__, *.db, logs/, .env, venv/, etc.
+   - Reduce tamaño de imagen: .git, **pycache**, \*.db, logs/, .env, venv/, etc.
 
 6. **docker-compose.yml**
+
    - Stack local para desarrollo/staging
    - Servicios:
      - **web**: Flask app en Gunicorn (puerto 8000)
@@ -59,7 +65,7 @@ Este documento describe cómo desplegar Kairos en un entorno de producción usan
 7. **nginx.conf**
    - Configuración de reverse proxy
    - Rate limiting por zona (API, general)
-   - Headers de seguridad (X-Forwarded-*, WebSocket support)
+   - Headers de seguridad (X-Forwarded-\*, WebSocket support)
    - Gzip compression habilitada
 
 ## 🚀 Deployment
@@ -93,11 +99,13 @@ docker-compose logs -f db
 ### 3. Ejecutar migraciones de base de datos
 
 El docker-compose.yml incluye el comando automáticamente:
+
 ```bash
 flask db upgrade
 ```
 
 Si necesitas ejecutarlo manualmente:
+
 ```bash
 docker-compose exec web flask db upgrade
 ```
@@ -128,26 +136,31 @@ docker-compose exec web flask shell
 ### En Producción:
 
 1. **SECRET_KEY**: Generar con `os.urandom(24).hex()` o `secrets.token_hex(24)`
+
    ```python
    import secrets
    print(secrets.token_hex(24))
    ```
 
 2. **DATABASE_URL**: Usar credenciales fuertes en PostgreSQL
+
    ```
    postgresql://kairos_user:strong_password_here@db.example.com:5432/kairos_db
    ```
 
 3. **HTTPS**: Configurar certificado SSL en Nginx/reverse proxy
+
    - Redirigir HTTP → HTTPS
    - HSTS headers: `Strict-Transport-Security: max-age=31536000`
 
 4. **Environment variables**: Usar secrets management
+
    - AWS Secrets Manager
    - HashiCorp Vault
    - GitHub Secrets (para CI/CD)
 
 5. **Cookies seguras**:
+
    - `SESSION_COOKIE_SECURE=True` (solo HTTPS)
    - `SESSION_COOKIE_SAMESITE=Strict` (CSRF protection)
    - `SESSION_COOKIE_HTTPONLY=True` (no accessible from JS)
@@ -174,6 +187,7 @@ GET /health
 ```
 
 Respuesta:
+
 ```json
 {
   "status": "ok",
@@ -182,12 +196,14 @@ Respuesta:
 ```
 
 Status codes:
+
 - `200`: Healthy
 - `503`: Unhealthy (DB disconnected)
 
 ### Métricas (Opcional)
 
 Agregar Prometheus/Grafana:
+
 ```dockerfile
 # En docker-compose.yml
 services:
@@ -234,12 +250,14 @@ jobs:
 ## 🛑 Troubleshooting
 
 ### Container no inicia
+
 ```bash
 docker-compose logs web
 # Verificar: SECRET_KEY, DATABASE_URL, permisos de directorios
 ```
 
 ### Health check falla
+
 ```bash
 docker-compose exec web flask shell
 >>> from models_alchemy import db
@@ -248,6 +266,7 @@ docker-compose exec web flask shell
 ```
 
 ### Database migration error
+
 ```bash
 docker-compose exec web flask db current
 docker-compose exec web flask db heads
@@ -255,6 +274,7 @@ docker-compose exec web flask db upgrade
 ```
 
 ### Limpiar todo y reiniciar
+
 ```bash
 docker-compose down -v  # Elimina volumes
 docker-compose up -d --build
