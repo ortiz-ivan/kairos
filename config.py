@@ -36,6 +36,7 @@ class Config:
 class DevelopmentConfig(Config):
     """Configuración para desarrollo local."""
 
+    ENV = "development"
     DEBUG = True
     TESTING = False
 
@@ -55,6 +56,7 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     """Configuración para producción."""
 
+    ENV = "production"
     DEBUG = False
     TESTING = False
 
@@ -78,6 +80,7 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     """Configuración para testing."""
 
+    ENV = "testing"
     DEBUG = True
     TESTING = True
 
