@@ -11,6 +11,7 @@ Se ha migrado el almacenamiento de **ventas pendientes** de un archivo `pendient
 Se añadieron dos modelos ORM:
 
 - **`Pendiente`**: tabla `pendientes`
+
   - `id` (PK): entero
   - `fecha`: string (fecha de creación)
   - `usuario_id` (FK): ref. a usuarios
@@ -30,20 +31,24 @@ Se añadieron dos modelos ORM:
 Las funciones de manejo de pendientes ahora usan la BD en lugar de JSON:
 
 #### `guardar_pendiente(productos_cantidades, usuario_id=None)`
+
 - Calcula el total y detalles.
 - Crea un registro `Pendiente` y sus `PendienteDetalle` en la BD.
 - Retorna `(True, mensaje)` o `(False, mensaje)`.
 
 #### `obtener_pendientes()`
+
 - Consulta la tabla `pendientes` (ordenadas por ID desc).
 - Construye un dict similar al anterior formato JSON (con `detalles` anidados).
 - Retorna lista de pendientes o vacía en caso de error.
 
 #### `obtener_pendiente_por_id(pendiente_id)`
+
 - Obtiene un pendiente específico con sus detalles desde la BD.
 - Retorna dict o `None`.
 
 #### `eliminar_pendiente(pendiente_id)`
+
 - Elimina un pendiente y sus detalles de la BD.
 - Usa transacciones para atomicidad.
 - Retorna `(True, mensaje)` o `(False, mensaje)`.
@@ -55,6 +60,7 @@ Las funciones de manejo de pendientes ahora usan la BD en lugar de JSON:
 Se generó automáticamente una migración que crea las dos tablas con sus relaciones.
 
 **Comandos usados:**
+
 ```bash
 flask db migrate -m "add pendientes tables"
 flask db upgrade
@@ -69,6 +75,7 @@ python scripts/migrate_pendientes.py
 ```
 
 Si `pendientes.json` existe, el script:
+
 1. Lee el archivo JSON.
 2. Crea registros `Pendiente` y `PendienteDetalle` para cada pendiente.
 3. Los inserta en la BD.
@@ -89,6 +96,7 @@ La interfaz de las funciones de pendientes se mantiene igual: retornan dicts con
 ## Tests
 
 Todos los tests pasan (7 tests, 0 fallos):
+
 ```
 =============================================== 7 passed ===============================================
 ```

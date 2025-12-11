@@ -2,6 +2,7 @@ import os
 
 from flask import Flask, g, redirect, request, session, url_for
 
+from config import get_config
 from models.usuario import obtener_usuario_por_id
 from models_alchemy import db
 from routes.admin_routes import admin_bp
@@ -17,35 +18,16 @@ def create_app():
     app = Flask(__name__)
 
     # -------------------------
+    # Cargar configuración según entorno
+    # -------------------------
+    config = get_config(os.environ.get("FLASK_ENV"))
+    app.config.from_object(config)
+    is_production = config.ENV == "production"
+
+    # -------------------------
     # Configurar SQLAlchemy
     # -------------------------
-    base_dir = os.path.dirname(__file__)
-    app.config[
-        "SQLALCHEMY_DATABASE_URI"
-    ] = f"sqlite:///{os.path.join(base_dir, 'kairos.db')}"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
-
-    # Leer secret key desde variable de entorno; usar valor por defecto en desarrollo
-    secret = os.environ.get("SECRET_KEY")
-    is_production = (
-        os.environ.get("FLASK_ENV") == "production"
-        or os.environ.get("PRODUCTION") == "1"
-    )
-    if not secret:
-        app.logger.warning(
-            "No SECRET_KEY en entorno: usando clave por defecto (NO usar en producción)"
-        )
-        secret = "dev_secret_change_me"
-    app.secret_key = secret
-
-    # Cookies de sesión seguras
-    app.config.update(
-        SESSION_COOKIE_SECURE=True if is_production else False,
-        SESSION_COOKIE_SAMESITE="Lax",
-        SESSION_COOKIE_HTTPONLY=True,
-        PREFERRED_URL_SCHEME="https" if is_production else "http",
-    )
 
     # Forzar HTTPS en producción (simple redirect). Si se usa proxy/reverse-proxy, asegúrate de
     # configurar X-Forwarded-Proto y ProxyFix en producción.
@@ -70,19 +52,33 @@ def create_app():
     # -------------------------
     # Ruta raíz
     # -------------------------
-    # -------------------------
-    # Configurar Logging y Error Handlers
-    # -------------------------
-    logger = setup_logging(app)
-    logger.info("=== Iniciando aplicación Kairos ===")
-    register_error_handlers(app)
-
     @app.route("/")
     def index():
         """Redirige según autenticación: si está logueado va a ventas, sino a login."""
         if g.usuario:
             return redirect(url_for("ventas.agregar_venta_view"))
         return redirect(url_for("auth.login"))
+
+    # -------------------------
+    # Health Check
+    # -------------------------
+    @app.route("/health")
+    def health():
+        """Endpoint para Docker healthcheck y load balancers."""
+        try:
+            # Verificar conexión a base de datos
+            db.session.execute("SELECT 1")
+            return {"status": "ok", "database": "connected"}, 200
+        except Exception as e:
+            app.logger.error(f"Health check failed: {e}")
+            return {"status": "error", "database": "disconnected"}, 503
+
+    # -------------------------
+    # Configurar Logging y Error Handlers
+    # -------------------------
+    logger = setup_logging(app)
+    logger.info("=== Iniciando aplicación Kairos ===")
+    register_error_handlers(app)
 
     # -------------------------
     # Registro de Blueprints
@@ -97,7 +93,6 @@ def create_app():
     return app
 
 
-# Lanzar aplicación
 if __name__ == "__main__":
     app = create_app()
     app.run(debug=True)

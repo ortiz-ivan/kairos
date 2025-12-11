@@ -1,0 +1,59 @@
+# Archivos y directorios a excluir de la imagen Docker
+
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database (local)
+*.db
+*.sqlite
+
+# Logs (local, Docker logs van a stdout/stderr)
+logs/
+*.log
+
+# Archivos de configuración local
+.env
+.env.local
+.env.*.local
+
+# Pre-commit
+.pre-commit/
+
+# Node (si tienes frontend)
+node_modules/
+npm-debug.log
+
+# Temporales
+*.tmp
+.cache/
