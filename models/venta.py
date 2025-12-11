@@ -1,11 +1,17 @@
 """Modelo de Venta con SQLAlchemy ORM."""
 
-import json
-import os
 from datetime import datetime
 
 from models.producto import obtener_producto_por_id
-from models_alchemy import DetalleVenta, Producto, User, Venta, db
+from models_alchemy import (
+    DetalleVenta,
+    Pendiente,
+    PendienteDetalle,
+    Producto,
+    User,
+    Venta,
+    db,
+)
 
 
 def registrar_venta(productos_cantidades, usuario_id=None):
@@ -87,24 +93,16 @@ def registrar_venta(productos_cantidades, usuario_id=None):
 
 
 def _pendientes_file_path():
-    base = os.path.dirname(os.path.dirname(__file__))
-    return os.path.join(base, "pendientes.json")
+    # no longer used (pendientes now persisted in DB)
+    return None
 
 
 def guardar_pendiente(productos_cantidades, usuario_id=None):
     """Guarda una venta como pendiente en archivo JSON (no modifica stock)."""
     try:
-        path = _pendientes_file_path()
-        if not os.path.exists(path):
-            with open(path, "w", encoding="utf-8") as fh:
-                json.dump([], fh, ensure_ascii=False)
-
-        with open(path, "r", encoding="utf-8") as fh:
-            pendientes = json.load(fh)
-
-        # Calcular total aproximado (tomando precio actual de productos)
+        # Calcular total (tomando precio actual de productos)
         total = 0
-        detalles = []
+        detalles_data = []
         for item in productos_cantidades:
             producto_id = int(item["id"])
             cantidad = int(item["cantidad"])
@@ -112,9 +110,9 @@ def guardar_pendiente(productos_cantidades, usuario_id=None):
             precio = producto["precio"] if producto else 0
             subtotal = precio * cantidad
             total += subtotal
-            detalles.append(
+            detalles_data.append(
                 {
-                    "id": producto_id,
+                    "producto_id": producto_id,
                     "nombre": producto["nombre"] if producto else "-",
                     "cantidad": cantidad,
                     "precio": precio,
@@ -122,41 +120,87 @@ def guardar_pendiente(productos_cantidades, usuario_id=None):
                 }
             )
 
-        pendiente = {
-            "id": int(datetime.utcnow().timestamp()),
-            "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "usuario_id": usuario_id,
-            "total": total,
-            "detalles": detalles,
-        }
+        # Persistir pendiente y sus detalles en la base de datos
+        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        pendiente = Pendiente(fecha=fecha, usuario_id=usuario_id, total=total)
+        db.session.add(pendiente)
+        db.session.flush()  # obtener id
+        for d in detalles_data:
+            pd = PendienteDetalle(
+                pendiente_id=pendiente.id,
+                producto_id=d.get("producto_id"),
+                nombre=d.get("nombre"),
+                cantidad=d.get("cantidad"),
+                precio=d.get("precio"),
+                subtotal=d.get("subtotal"),
+            )
+            db.session.add(pd)
 
-        pendientes.append(pendiente)
-
-        with open(path, "w", encoding="utf-8") as fh:
-            json.dump(pendientes, fh, ensure_ascii=False, indent=2)
-
+        db.session.commit()
         return True, "Pendiente guardado exitosamente."
     except Exception as e:
+        db.session.rollback()
         return False, str(e)
 
 
 def obtener_pendientes():
-    path = _pendientes_file_path()
-    if not os.path.exists(path):
-        return []
+    # Obtener pendientes desde la base de datos
     try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
+        pendientes = db.session.query(Pendiente).order_by(Pendiente.id.desc()).all()
+        resultados = []
+        for p in pendientes:
+            detalles = (
+                db.session.query(PendienteDetalle).filter_by(pendiente_id=p.id).all()
+            )
+            detalles_list = [
+                {
+                    "id": d.producto_id,
+                    "nombre": d.nombre,
+                    "cantidad": d.cantidad,
+                    "precio": d.precio,
+                    "subtotal": d.subtotal,
+                }
+                for d in detalles
+            ]
+            resultados.append(
+                {
+                    "id": p.id,
+                    "fecha": p.fecha,
+                    "usuario_id": p.usuario_id,
+                    "total": p.total,
+                    "detalles": detalles_list,
+                }
+            )
+        return resultados
     except Exception:
         return []
 
 
 def obtener_pendiente_por_id(pendiente_id):
-    pendientes = obtener_pendientes()
-    for p in pendientes:
-        if str(p.get("id")) == str(pendiente_id):
-            return p
-    return None
+    try:
+        p = db.session.get(Pendiente, int(pendiente_id))
+        if not p:
+            return None
+        detalles = db.session.query(PendienteDetalle).filter_by(pendiente_id=p.id).all()
+        detalles_list = [
+            {
+                "id": d.producto_id,
+                "nombre": d.nombre,
+                "cantidad": d.cantidad,
+                "precio": d.precio,
+                "subtotal": d.subtotal,
+            }
+            for d in detalles
+        ]
+        return {
+            "id": p.id,
+            "fecha": p.fecha,
+            "usuario_id": p.usuario_id,
+            "total": p.total,
+            "detalles": detalles_list,
+        }
+    except Exception:
+        return None
 
 
 def obtener_ventas():
@@ -210,21 +254,15 @@ def eliminar_pendiente(pendiente_id):
     Retorna: (True, mensaje) o (False, mensaje)
     """
     try:
-        path = _pendientes_file_path()
-        if not os.path.exists(path):
-            return False, "No hay pendientes guardados."
-
-        with open(path, "r", encoding="utf-8") as fh:
-            pendientes = json.load(fh)
-
-        nuevos = [p for p in pendientes if str(p.get("id")) != str(pendiente_id)]
-
-        if len(nuevos) == len(pendientes):
+        p = db.session.get(Pendiente, int(pendiente_id))
+        if not p:
             return False, "Pendiente no encontrado."
 
-        with open(path, "w", encoding="utf-8") as fh:
-            json.dump(nuevos, fh, ensure_ascii=False, indent=2)
-
+        # Eliminar detalles y el pendiente
+        db.session.query(PendienteDetalle).filter_by(pendiente_id=p.id).delete()
+        db.session.delete(p)
+        db.session.commit()
         return True, "Pendiente eliminado correctamente."
     except Exception as e:
+        db.session.rollback()
         return False, str(e)
