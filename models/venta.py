@@ -202,3 +202,29 @@ def obtener_detalle_venta(venta_id):
         }
         for d in detalles
     ]
+
+
+def eliminar_pendiente(pendiente_id):
+    """Elimina un pendiente por ID del archivo JSON.
+
+    Retorna: (True, mensaje) o (False, mensaje)
+    """
+    try:
+        path = _pendientes_file_path()
+        if not os.path.exists(path):
+            return False, "No hay pendientes guardados."
+
+        with open(path, "r", encoding="utf-8") as fh:
+            pendientes = json.load(fh)
+
+        nuevos = [p for p in pendientes if str(p.get("id")) != str(pendiente_id)]
+
+        if len(nuevos) == len(pendientes):
+            return False, "Pendiente no encontrado."
+
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(nuevos, fh, ensure_ascii=False, indent=2)
+
+        return True, "Pendiente eliminado correctamente."
+    except Exception as e:
+        return False, str(e)

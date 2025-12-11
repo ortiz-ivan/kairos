@@ -5,7 +5,12 @@ from urllib.parse import urlencode
 
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 
-from models.venta import obtener_detalle_venta, obtener_pendientes, obtener_ventas
+from models.venta import (
+    eliminar_pendiente,
+    obtener_detalle_venta,
+    obtener_pendientes,
+    obtener_ventas,
+)
 from services.ventas_service import (
     estadisticas_del_dia,
     filter_ventas,
@@ -113,3 +118,19 @@ def listado_pendientes():
     logger.info(f"Usuario {g.usuario['username']} accedió a pendientes de venta")
     pendientes = obtener_pendientes()
     return render_template("pendientes.html", pendientes=pendientes)
+
+
+@registros_bp.route("/pendientes/eliminar/<int:pendiente_id>", methods=["POST"])
+@login_required
+def eliminar_pendiente_view(pendiente_id):
+    """Elimina un pendiente y responde JSON para peticiones AJAX."""
+    ok, msg = eliminar_pendiente(pendiente_id)
+    if ok:
+        logger.info(
+            f"Pendiente eliminado - Usuario: {g.usuario['username']}, ID: {pendiente_id}"
+        )
+        return {"success": True, "mensaje": msg}
+    logger.warning(
+        f"Fallo al eliminar pendiente - Usuario: {g.usuario['username']}, ID: {pendiente_id}, Msg: {msg}"
+    )
+    return {"success": False, "mensaje": msg}

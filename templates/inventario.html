@@ -7,48 +7,112 @@
     </a>
 
     <!-- Resumen de inventario -->
-    {% set total_productos = productos|length %}
-    {% set stock_bajo_count = productos|selectattr("stock", "le", stock_bajo)|list|length %}
-    {% set stock_medio_count = productos|selectattr("stock", "gt", stock_bajo)|selectattr("stock", "le", stock_bajo + 5)|list|length %}
+    {% set total_productos = total_items if total_items is defined else productos|length %}
+    {% set stock_bajo_count = stock_bajo_count if stock_bajo_count is defined else productos|selectattr("stock", "le", stock_bajo)|list|length %}
+    {% set stock_medio_count = stock_medio_count if stock_medio_count is defined else productos|selectattr("stock", "gt", stock_bajo)|selectattr("stock", "le", stock_bajo + 5)|list|length %}
 
+    <div class="row g-3 mb-4">
+        <!-- Total de productos -->
+        <div class="col-md-3">
+            <div class="card border-primary shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="card-title text-muted">Total de Productos</h6>
+                    <h3 class="text-primary">{{ total_productos }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total en stock -->
+        <div class="col-md-3">
+            <div class="card border-success shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="card-title text-muted">Total en Stock</h6>
+                    <h3 class="text-success">{{ total_stock }}</h3>
+                    <small class="text-muted">unidades</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Valor total del inventario -->
+        <div class="col-md-3">
+            <div class="card border-info shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="card-title text-muted">Valor Total Inventario</h6>
+                    <h3 class="text-info">₲{{ '{:,.0f}'.format(valor_total_inventario) }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Producto más vendido -->
+        <div class="col-md-3">
+            <div class="card border-warning shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="card-title text-muted">Producto Más Vendido</h6>
+                    {% if producto_mas_vendido %}
+                        <h5 class="text-warning">{{ producto_mas_vendido['nombre'] }}</h5>
+                        <small class="text-muted">{{ producto_mas_vendido['cantidad_vendida'] }} unidades vendidas</small>
+                    {% else %}
+                        <p class="text-muted">Sin ventas registradas</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicadores de stock -->
     <div class="mb-4">
-        <span class="badge bg-primary">Total productos: {{ total_productos }}</span>
         <span class="badge bg-danger">Stock bajo: {{ stock_bajo_count }}</span>
         <span class="badge bg-warning text-dark">Stock medio: {{ stock_medio_count }}</span>
     </div>
 
-    <!-- Filtro de categoría -->
-    <div class="mb-3 d-flex align-items-center gap-2">
-        <label for="filtro_categoria" class="form-label mb-0">Filtrar por categoría:</label>
-        <select id="filtro_categoria" class="form-select w-auto">
-            <option value="">Todas</option>
-            {% for cat in categorias %}
-                <option value="{{ cat }}" {% if filtro_categoria == cat %}selected{% endif %}>{{ cat }}</option>
-            {% endfor %}
-        </select>
+    <!-- Buscador y Filtro de categoría -->
+    <div class="mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-6">
+                <label for="buscar_producto" class="form-label">Buscar (nombre o código):</label>
+                <input type="text" id="buscar_producto" class="form-control" placeholder="ej: 'Coca Cola' o '8806555339'">
+            </div>
+            <div class="col-md-6">
+                <label for="filtro_categoria" class="form-label">Filtrar por categoría:</label>
+                <select id="filtro_categoria" class="form-select">
+                    <option value="">Todas</option>
+                    {% for cat in categorias %}
+                        <option value="{{ cat }}" {% if filtro_categoria == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-striped table-hover table-bordered align-middle">
+        <table class="table table-striped table-hover table-bordered align-middle" id="tablaInventario">
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
-                    <th>Código</th>
+                    <th class="sortable-col" data-column="codigo">
+                        Código <span class="sort-icon">⇅</span>
+                    </th>
                     <th>Producto</th>
-                    <th>Precio (₲)</th>
-                    <th>Stock</th>
-                    <th>Categoría</th>
+                    <th class="sortable-col" data-column="precio">
+                        Precio (₲) <span class="sort-icon">⇅</span>
+                    </th>
+                    <th class="sortable-col" data-column="stock">
+                        Stock <span class="sort-icon">⇅</span>
+                    </th>
+                    <th class="sortable-col" data-column="categoria">
+                        Categoría <span class="sort-icon">⇅</span>
+                    </th>
                     <th>Acciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="tablaBody">
                 {% for producto in productos %}
-                <tr class="stock-row" data-categoria="{{ producto['categoria'] }}">
+                <tr class="stock-row" data-categoria="{{ producto['categoria'] }}" data-nombre="{{ producto['nombre'].lower() }}" data-codigo="{{ producto['codigo_barras'].lower() }}" data-precio="{{ producto['precio'] }}" data-stock="{{ producto['stock'] }}">
                     <td>{{ producto['id'] }}</td>
                     <td>{{ producto['codigo_barras'] }}</td>
                     <td>{{ producto['nombre'] }}</td>
-                    <td>₲{{ '{:,.0f}'.format(producto['precio']) }}</td>
-                    <td>
+                    <td data-sort-value="{{ producto['precio'] }}">₲{{ '{:,.0f}'.format(producto['precio']) }}</td>
+                    <td data-sort-value="{{ producto['stock'] }}">
                         {% if producto['stock'] <= stock_bajo %}
                             <span class="badge bg-danger">{{ producto['stock'] }}</span>
                         {% elif producto['stock'] <= stock_bajo + 5 %}
@@ -58,13 +122,25 @@
                         {% endif %}
                     </td>
                     <td>{{ producto['categoria'] }}</td>
-                    <td class="d-flex gap-1">
-                        <a href="{{ url_for('productos.editar_producto_view', id=producto['id']) }}" class="btn btn-primary btn-sm">
-                            <i class="bi bi-pencil-fill"></i> Editar
-                        </a>
-                        <a href="{{ url_for('productos.eliminar_producto_view', id=producto['id']) }}" class="btn btn-danger btn-sm">
-                            <i class="bi bi-trash-fill"></i> Eliminar
-                        </a>
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Acciones">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('productos.editar_producto_view', id=producto['id']) }}">
+                                        <i class="bi bi-pencil-fill"></i> Editar
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ url_for('productos.eliminar_producto_view', id=producto['id']) }}">
+                                        <i class="bi bi-trash-fill"></i> Eliminar
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -77,18 +153,146 @@
         <span class="badge bg-warning text-dark">Amarillo</span> stock medio,
         <span class="badge bg-success">Verde</span> stock suficiente
     </p>
+
+    <!-- Paginación -->
+    {% if total_pages is defined and total_pages > 1 %}
+    <nav aria-label="Paginación inventario" class="mt-3">
+        <ul class="pagination justify-content-center">
+            {% set prev_page = page - 1 if page and page > 1 else 1 %}
+            <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ prev_page }}" aria-label="Anterior">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+
+            {% for pagenum in range(1, total_pages + 1) %}
+            <li class="page-item {% if pagenum == page %}active{% endif %}">
+                <a class="page-link" href="?page={{ pagenum }}">{{ pagenum }}</a>
+            </li>
+            {% endfor %}
+
+            {% set next_page = page + 1 if page and page < total_pages else total_pages %}
+            <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ next_page }}" aria-label="Siguiente">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+        <div class="text-center text-muted small">
+            {% set start = ((page - 1) * per_page) + 1 if page and per_page else 1 %}
+            {% set end = start + (productos|length) - 1 %}
+            Mostrando {{ start }}–{{ end }} de {{ total_items }} productos
+        </div>
+    </nav>
+    {% endif %}
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const filas = document.querySelectorAll(".stock-row");
-    const filtro = document.getElementById("filtro_categoria");
+    const filtroCategoria = document.getElementById("filtro_categoria");
+    const buscarInput = document.getElementById("buscar_producto");
+    const tablaBody = document.getElementById("tablaBody");
+    const columnasOrdenables = document.querySelectorAll(".sortable-col");
 
-    // Filtro de categoría
-    filtro.addEventListener("change", () => {
-        const categoria = filtro.value;
+    let ordenActual = null;
+    let direccion = "asc"; // asc o desc
+
+    // Función para aplicar filtros
+    function aplicarFiltros() {
+        const categoriaSeleccionada = filtroCategoria.value;
+        const termino = buscarInput.value.toLowerCase().trim();
+
         filas.forEach(fila => {
-            fila.style.display = (!categoria || fila.dataset.categoria === categoria) ? "" : "none";
+            const categoria = fila.dataset.categoria;
+            const nombre = fila.dataset.nombre;
+            const codigo = fila.dataset.codigo;
+
+            // Validar categoría
+            const pasaCategoria = !categoriaSeleccionada || categoria === categoriaSeleccionada;
+
+            // Validar búsqueda (nombre o código)
+            const pasaBusqueda = !termino || nombre.includes(termino) || codigo.includes(termino);
+
+            // Mostrar/ocultar fila
+            fila.style.display = (pasaCategoria && pasaBusqueda) ? "" : "none";
+        });
+    }
+
+    // Función para ordenar tabla
+    function ordenarTabla(columna) {
+        // Si hace click en la misma columna, cambiar dirección
+        if (ordenActual === columna) {
+            direccion = direccion === "asc" ? "desc" : "asc";
+        } else {
+            ordenActual = columna;
+            direccion = "asc";
+        }
+
+        // Obtener filas visibles
+        const filasVisibles = Array.from(filas).filter(fila => fila.style.display !== "none");
+
+        // Ordenar filas
+        filasVisibles.sort((a, b) => {
+            let valorA, valorB;
+
+            if (columna === "precio" || columna === "stock") {
+                // Ordenar numéricamente
+                valorA = parseFloat(a.dataset[columna]);
+                valorB = parseFloat(b.dataset[columna]);
+            } else if (columna === "codigo") {
+                // Ordenar por código (string)
+                valorA = a.dataset.codigo.toLowerCase();
+                valorB = b.dataset.codigo.toLowerCase();
+            } else if (columna === "categoria") {
+                // Ordenar por categoría (string)
+                valorA = a.dataset.categoria.toLowerCase();
+                valorB = b.dataset.categoria.toLowerCase();
+            }
+
+            // Comparar según dirección
+            if (direccion === "asc") {
+                return valorA > valorB ? 1 : valorA < valorB ? -1 : 0;
+            } else {
+                return valorA < valorB ? 1 : valorA > valorB ? -1 : 0;
+            }
+        });
+
+        // Reinsertar filas en nuevo orden
+        filasVisibles.forEach(fila => tablaBody.appendChild(fila));
+
+        // Actualizar iconos de ordenamiento
+        actualizarIconosOrdenamiento(columna);
+    }
+
+    // Función para actualizar iconos de ordenamiento
+    function actualizarIconosOrdenamiento(columnaActual) {
+        columnasOrdenables.forEach(col => {
+            const icon = col.querySelector(".sort-icon");
+            if (col.dataset.column === columnaActual) {
+                // Mostrar flecha según dirección
+                icon.textContent = direccion === "asc" ? "↑" : "↓";
+                col.style.fontWeight = "bold";
+                col.style.color = "#fff";
+            } else {
+                // Resetear icono
+                icon.textContent = "⇅";
+                col.style.fontWeight = "normal";
+                col.style.color = "inherit";
+            }
+        });
+    }
+
+    // Event listeners para filtros
+    filtroCategoria.addEventListener("change", aplicarFiltros);
+    buscarInput.addEventListener("input", aplicarFiltros);
+
+    // Event listeners para ordenamiento
+    columnasOrdenables.forEach(col => {
+        col.style.cursor = "pointer";
+        col.addEventListener("click", () => {
+            const columna = col.dataset.column;
+            ordenarTabla(columna);
         });
     });
 });
