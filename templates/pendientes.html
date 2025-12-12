@@ -151,23 +151,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 {% endblock %}
-                .then(function(data){
-                    if(data && data.success){
-                        // Remover filas del DOM
-                        var row = document.getElementById('pendiente-row-' + id);
-                        var details = document.getElementById('pendiente-details-' + id);
-                        if(details) details.remove();
-                        if(row) row.remove();
-                    } else {
-                        alert(data && data.mensaje ? data.mensaje : 'Error al eliminar el pendiente.');
-                    }
-                })
-                .catch(function(err){
-                    console.error(err);
-                    alert('Error de red al eliminar el pendiente.');
-                });
-        });
-    });
-});
-</script>
-{% endblock %}
