@@ -14,7 +14,7 @@ services:
         value: "1"
       - key: SECRET_KEY
         fromDatabase:
-          name: kairos-db
+          name: Kairos-db
           property: password
       - key: DATABASE_URL
         fromDatabase:
