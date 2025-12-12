@@ -23,7 +23,7 @@
                     <td>{{ p['usuario_id'] or '-' }}</td>
                     <td>₲{{ '{:,.0f}'.format(p['total']) }}</td>
                     <td>
-                        <a href="{{ url_for('ventas.agregar_venta_view') }}?pendiente_id={{ p['id'] }}" class="btn btn-primary btn-sm">Retomar</a>
+                        <button type="button" class="btn btn-success btn-sm btn-retomar-pendiente" data-id="{{ p['id'] }}" data-url="{{ url_for('registros.eliminar_pendiente_view', pendiente_id=p['id']) }}">Retomar</button>
                         <button type="button" class="btn btn-info btn-sm btn-toggle-detalles" data-id="{{ p['id'] }}">Ver productos</button>
                         <button type="button" class="btn btn-danger btn-sm btn-delete-pendiente" data-id="{{ p['id'] }}" data-url="{{ url_for('registros.eliminar_pendiente_view', pendiente_id=p['id']) }}">Eliminar</button>
                     </td>
@@ -87,6 +87,36 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Retomar pendiente (elimina el pendiente y redirige a agregar venta)
+    document.querySelectorAll('.btn-retomar-pendiente').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var id = this.dataset.id;
+            var url = this.dataset.url;
+
+            // Eliminar el pendiente antes de redirigir
+            fetch(url, { method: 'POST' })
+                .then(function(resp){ return resp.json(); })
+                .then(function(data){
+                    if(data && data.success){
+                        // Remover filas del DOM
+                        var row = document.getElementById('pendiente-row-' + id);
+                        var details = document.getElementById('pendiente-details-' + id);
+                        if(details) details.remove();
+                        if(row) row.remove();
+
+                        // Redirigir a agregar venta con pendiente_id
+                        window.location.href = "{{ url_for('ventas.agregar_venta_view') }}?pendiente_id=" + id;
+                    } else {
+                        alert(data && data.mensaje ? data.mensaje : 'Error al retomar el pendiente.');
+                    }
+                })
+                .catch(function(err){
+                    console.error(err);
+                    alert('Error de red al retomar el pendiente.');
+                });
+        });
+    });
+
     // Eliminar pendiente via AJAX
     document.querySelectorAll('.btn-delete-pendiente').forEach(function(btn){
         btn.addEventListener('click', function(){
@@ -98,6 +128,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
             fetch(url, { method: 'POST' })
                 .then(function(resp){ return resp.json(); })
+                .then(function(data){
+                    if(data && data.success){
+                        // Remover filas del DOM
+                        var row = document.getElementById('pendiente-row-' + id);
+                        var details = document.getElementById('pendiente-details-' + id);
+                        if(details) details.remove();
+                        if(row) row.remove();
+
+                        // Mostrar mensaje de éxito
+                        alert('Pendiente eliminado correctamente.');
+                    } else {
+                        alert(data && data.mensaje ? data.mensaje : 'Error al eliminar el pendiente.');
+                    }
+                })
+                .catch(function(err){
+                    console.error(err);
+                    alert('Error de red al eliminar el pendiente.');
+                });
+        });
+    });
+});
+</script>
+{% endblock %}
                 .then(function(data){
                     if(data && data.success){
                         // Remover filas del DOM
