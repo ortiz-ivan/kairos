@@ -247,10 +247,6 @@ FLASK_DEBUG=1
 5. **Búsqueda avanzada:** Full-text search en productos
 6. **Reportes:** Generación de PDF/Excel con gráficos de ventas
 
-## 📝 Licencia
-
-MIT License - Ver `LICENSE` para detalles
-
 ## 🤝 Contribuciones
 
 1. Fork el proyecto
@@ -263,4 +259,4 @@ MIT License - Ver `LICENSE` para detalles
 
 ## 📧 Contacto
 
-[Insertar contacto/issues]
+[ivanzitro18@gmail.com]
