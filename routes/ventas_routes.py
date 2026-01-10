@@ -13,7 +13,7 @@ from flask import (
 )
 
 from models.producto import obtener_producto_por_codigo, obtener_productos
-from models.venta import guardar_pendiente, obtener_pendiente_por_id, registrar_venta
+from models.venta import registrar_venta
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -38,7 +38,6 @@ def agregar_venta_view():
     """Registra una venta con validaciones completas."""
     if request.method == "POST":
         productos_json = request.form.get("productos")
-        pendiente_flag = request.form.get("pendiente") == "1"
 
         # Validación 1: JSON está presente
         if not productos_json or productos_json.strip() == "":
@@ -98,23 +97,6 @@ def agregar_venta_view():
                 return redirect(url_for("ventas.agregar_venta_view"))
 
         # Si todas las validaciones pasaron, registrar venta
-        if pendiente_flag:
-            # Guardar como pendiente: no validar stock ni descontar
-            exito, mensaje = guardar_pendiente(
-                productos_cantidades, usuario_id=g.usuario["id"]
-            )
-            if exito:
-                logger.info(
-                    "Venta guardada como pendiente - Usuario: %s, Productos: %d",
-                    g.usuario["username"],
-                    len(productos_cantidades),
-                )
-                flash("Venta guardada como pendiente.", "success")
-            else:
-                logger.error(f"Fallo al guardar pendiente: {mensaje}")
-                flash(f"Error al guardar pendiente: {mensaje}", "error")
-            return redirect(url_for("ventas.agregar_venta_view"))
-
         exito, mensaje = registrar_venta(
             productos_cantidades, usuario_id=g.usuario["id"]
         )
@@ -134,13 +116,7 @@ def agregar_venta_view():
 
         return redirect(url_for("ventas.agregar_venta_view"))
 
-    # Si se solicita retomar un pendiente, obtenerlo y pasarlo a la plantilla
-    pendiente_id = request.args.get("pendiente_id")
-    pendiente_data = None
-    if pendiente_id:
-        pendiente_data = obtener_pendiente_por_id(pendiente_id)
-
-    return render_template("agregar_venta.html", pendiente=pendiente_data)
+    return render_template("agregar_venta.html")
 
 
 @ventas_bp.route("/buscar/<codigo_barras>")

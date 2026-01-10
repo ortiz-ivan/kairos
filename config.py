@@ -40,11 +40,17 @@ class DevelopmentConfig(Config):
     DEBUG = True
     TESTING = False
 
-    # SQLite local
-    base_dir = os.path.dirname(__file__)
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL", f"sqlite:///{os.path.join(base_dir, 'kairos.db')}"
-    )
+    # SQLite local - usar directorio de datos si está disponible
+    data_dir = os.environ.get("KAIROS_DATA_DIR")
+    if data_dir:
+        # Ejecutable compilado con datos en carpeta persistente
+        db_path = os.path.join(data_dir, "kairos.db")
+    else:
+        # Desarrollo desde código fuente
+        base_dir = os.path.dirname(__file__)
+        db_path = os.path.join(base_dir, "kairos.db")
+
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", f"sqlite:///{db_path}")
 
     # Session
     SESSION_COOKIE_SECURE = False

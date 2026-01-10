@@ -37,22 +37,3 @@ class DetalleVenta(db.Model):
     producto_id = db.Column(db.Integer, db.ForeignKey("productos.id"), nullable=False)
     cantidad = db.Column(db.Integer, nullable=False)
     subtotal = db.Column(db.Float, nullable=False)
-
-
-class Pendiente(db.Model):
-    __tablename__ = "pendientes"
-    id = db.Column(db.Integer, primary_key=True)
-    fecha = db.Column(db.String, nullable=False)
-    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True)
-    total = db.Column(db.Float, nullable=False)
-
-
-class PendienteDetalle(db.Model):
-    __tablename__ = "pendiente_detalles"
-    id = db.Column(db.Integer, primary_key=True)
-    pendiente_id = db.Column(db.Integer, db.ForeignKey("pendientes.id"), nullable=False)
-    producto_id = db.Column(db.Integer, db.ForeignKey("productos.id"), nullable=True)
-    nombre = db.Column(db.String, nullable=True)
-    cantidad = db.Column(db.Integer, nullable=False)
-    precio = db.Column(db.Float, nullable=False)
-    subtotal = db.Column(db.Float, nullable=False)
