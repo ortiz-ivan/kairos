@@ -1,5 +1,6 @@
 """Rutas para el listado y visualización de registros de ventas."""
 
+from datetime import datetime
 from functools import wraps
 from urllib.parse import urlencode
 
@@ -8,9 +9,13 @@ from flask import Blueprint, flash, g, redirect, render_template, request, url_f
 from models.venta import obtener_detalle_venta, obtener_ventas
 from services.ventas_service import (
     estadisticas_del_dia,
+    estadisticas_generales,
     filter_ventas,
     paginate,
+    productos_mas_vendidos,
     usuarios_unicos,
+    ventas_por_mes,
+    ventas_por_semana,
 )
 from utils.logging_config import get_logger
 
@@ -30,8 +35,24 @@ def login_required(f):
     return decorated
 
 
+# Decorador admin_required
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if g.usuario is None:
+            flash("Debe iniciar sesión para acceder.", "error")
+            return redirect(url_for("auth.login"))
+        if g.usuario["rol"] != "admin":
+            flash("Acceso denegado. Se requieren permisos de administrador.", "danger")
+            return redirect(url_for("auth.login"))
+        return f(*args, **kwargs)
+
+    return decorated
+
+
 @registros_bp.route("/")
 @login_required
+@admin_required
 def listado_registros():
     """Lista registros de ventas con filtros avanzados."""
     logger.info(f"Usuario {g.usuario['username']} accedió a listado de registros")
@@ -63,6 +84,17 @@ def listado_registros():
     # Estadísticas del día (delegado a servicio)
     estadisticas = estadisticas_del_dia(ventas_list)
 
+    # Estadísticas generales para dashboard
+    estadisticas_general = estadisticas_generales(ventas_list)
+
+    # Datos para gráficos
+    ventas_mensuales = ventas_por_mes(ventas_list, meses_atras=6)
+    ventas_semanales = ventas_por_semana(ventas_list, semanas_atras=8)
+    top_productos = productos_mas_vendidos(ventas_list, obtener_detalle_venta, top_n=5)
+
+    # Fecha actual para el template
+    now = datetime.now()
+
     logger.info(
         f"Listado de registros - Usuario: {g.usuario['username']}, "
         f"Total: {len(ventas_list)}, Filtradas: {len(ventas_filtradas)}"
@@ -85,7 +117,7 @@ def listado_registros():
     query_string = urlencode(qp_no_page)
 
     return render_template(
-        "ventas.html",
+        "registros.html",
         ventas=ventas_pagina,
         ventas_total=ventas_list,
         obtener_detalle_venta=obtener_detalle_venta,
@@ -96,6 +128,11 @@ def listado_registros():
         monto_minimo=monto_minimo,
         usuarios_unicos=usuarios_unicos_list,
         estadisticas=estadisticas,
+        estadisticas_general=estadisticas_general,
+        ventas_mensuales=ventas_mensuales,
+        ventas_semanales=ventas_semanales,
+        top_productos=top_productos,
+        now=now,
         # Paginación
         page=page,
         per_page=per_page,

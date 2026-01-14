@@ -66,7 +66,6 @@
                     <!-- Formulario principal: ahora dividido en dos columnas (izquierda: formulario, derecha: resumen tipo POS) -->
                     <form method="POST" id="form_venta">
                         <input type="hidden" name="productos" id="productos_input">
-                        <input type="hidden" name="pendiente" id="pendiente_input" value="">
 
                         <div class="row">
                             <!-- Columna izquierda: búsqueda y tabla -->
@@ -107,21 +106,11 @@
                                             <button type="submit" class="btn btn-success btn-lg" id="btnRegistrar">
                                                 <i class="bi bi-check-circle"></i> Registrar Venta
                                             </button>
-                                            <button type="button" class="btn btn-outline-secondary" id="btnGuardarPendiente">Guardar como Pendiente</button>
-                                            <a href="{{ url_for('registros.listado_pendientes') }}" class="btn btn-outline-primary" id="btnVerPendientes">
-                                                <i class="bi bi-list-ul"></i> Ver Pendientes
-                                            </a>
                                         </div>
 
                                         <div class="text-start small text-muted">
                                             <div>Productos sin stock: <span id="productos_sin_stock">0</span></div>
                                             <div>Errores: <span id="errores_count">0</span></div>
-                                        </div>
-
-                                        <div class="form-check form-switch mt-3 text-start">
-                                            <input class="form-check-input" type="checkbox" id="checkboxPendiente" value="1">
-                                            <label class="form-check-label" for="checkboxPendiente">Guardar como venta pendiente</label>
-                                            <small class="d-block text-muted">Usar el botón "Guardar como Pendiente" para conservar la venta sin descontar stock.</small>
                                         </div>
                                     </div>
                                 </div>
@@ -144,7 +133,6 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    const servidorPendiente = {{ pendiente|tojson|default('null') }};
     const inputCodigo = document.getElementById("codigo_barras");
     const datalist = document.getElementById("sugerencias");
     const tablaBody = document.querySelector("#form_venta tbody");
@@ -163,46 +151,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let productosAgregados = {};
     let productoPreview = null;
-
-    // Si la plantilla pasó un pendiente para retomar, cargarlo en la tabla
-    if (servidorPendiente) {
-        try {
-            (servidorPendiente.detalles || []).forEach(d => {
-                productosAgregados[d.id] = {
-                    id: d.id,
-                    nombre: d.nombre,
-                    precio: d.precio || d.precio === 0 ? d.precio : 0,
-                    stock: d.stock || 0,
-                    cantidad: d.cantidad
-                };
-
-                const fila = document.createElement("tr");
-                fila.id = `fila_${d.id}`;
-                fila.innerHTML = `
-                    <td>${d.id}</td>
-                    <td>${d.nombre}</td>
-                    <td>₲${(d.precio||0).toLocaleString()}</td>
-                    <td>
-                        <input type="number" name="cantidad_${d.id}" id="cantidad_${d.id}" class="form-control cantidad"
-                               value="${d.cantidad}" min="1" max="${d.stock || 99999}" required>
-                        <small class="form-text text-muted">Máx: ${d.stock || 'N/A'} disponibles</small>
-                    </td>
-                    <td id="subtotal_${d.id}">₲${(d.subtotal||0).toLocaleString()}</td>
-                    <td><button type="button" class="btn btn-danger btn-sm eliminar" data-id="${d.id}" title="Eliminar producto">&times;</button></td>
-                `;
-                tablaBody.appendChild(fila);
-            });
-
-            // Marcar checkbox pendiente
-            const cb = document.getElementById('checkboxPendiente');
-            if (cb) cb.checked = true;
-
-            recalcularTotal();
-            actualizarEstadoBoton();
-        } catch (err) {
-            console.error('Error al cargar pendiente:', err);
-        }
-    }
 
     // ---- Autocompletado de códigos ----
     inputCodigo.addEventListener("input", async () => {
@@ -513,22 +461,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Estado inicial del botón
     actualizarEstadoBoton();
-
-    // Wire: botón Guardar como Pendiente -> setear hidden y enviar formulario
-    const pendienteInput = document.getElementById('pendiente_input');
-    const btnGuardarPendiente = document.getElementById('btnGuardarPendiente');
-    if (btnGuardarPendiente) {
-        btnGuardarPendiente.addEventListener('click', (e) => {
-            // Marcar como pendiente y enviar
-            if (pendienteInput) pendienteInput.value = '1';
-            // Usar requestSubmit para respetar validaciones nativas
-            if (typeof formVenta.requestSubmit === 'function') {
-                formVenta.requestSubmit();
-            } else {
-                formVenta.submit();
-            }
-        });
-    }
 
     // Asegurar que el botón Registrar limpia el flag de pendiente
     if (btnRegistrar) {

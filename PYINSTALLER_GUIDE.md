@@ -10,7 +10,7 @@ Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
 python -m PyInstaller kairos.spec -y
 ```
 
-El ejecutable estará en `dist/Kairos.exe` y los datos se guardarán en `dist/datos/kairos.db`
+El ejecutable estará en `dist/Kairos.exe` y los datos se guardarán en `%APPDATA%\Kairos\datos\kairos.db`
 
 ## 1️⃣ Instalación de PyInstaller
 
@@ -22,22 +22,25 @@ pip install pyinstaller
 
 ### ✅ Inicialización Automática de Base de Datos
 
-- La BD se crea automáticamente en: `dist/datos/kairos.db`
+- La BD se crea automáticamente en: `%APPDATA%\Kairos\datos\kairos.db`
 - Si no existe admin, se crea con credenciales: `admin` / `admin123`
-- Los datos **persisten** entre reinicios del ejecutable
+- Los datos **persisten** entre reinicios y actualizaciones
 
-### ✅ Almacenamiento Persistente
+### ✅ Almacenamiento Persistente Seguro
 
-Los datos se guardan en una carpeta especial `datos/` dentro de `dist/`:
+Los datos se guardan en **AppData/Roaming** (estándar de Windows):
 
 ```
-dist/
-├── Kairos.exe          ← Ejecutable
-├── datos/              ← Carpeta de datos (PERSISTEN AQUÍ)
-│   └── kairos.db      ← Base de datos SQLite
-├── logs/               ← Logs de la aplicación
-└── INICIAR_KAIROS.bat  ← Lanzador rápido
+C:\Users\[TU_USUARIO]\AppData\Roaming\Kairos\datos\
+└── kairos.db                    ← Base de datos SQLite
 ```
+
+**Ventajas:**
+
+- ✅ **Persiste entre actualizaciones** del ejecutable
+- ✅ **No se elimina** cuando regeneras el exe
+- ✅ **Instalación multi-computadora** segura
+- ✅ **Backup fácil** - solo copia la carpeta AppData\Kairos
 
 ## 3️⃣ Usar el Ejecutable
 
@@ -66,45 +69,88 @@ Puedes crear más usuarios desde el panel de administración después de login.
 
 ## 5️⃣ Persistencia de Datos
 
-**Importante:** Los datos se guardan automáticamente en `dist/datos/kairos.db`
+**Importante:** Los datos se guardan automáticamente en `%APPDATA%\Kairos\datos\kairos.db`
 
 ✅ Usuarios se conservan entre reinicios
 ✅ Productos se conservan
 ✅ Ventas se conservan
 ✅ Cambios se guardan en tiempo real
+✅ **Los datos NO se pierden al actualizar el ejecutable**
 
-**No pierdas la carpeta `dist/datos/`** - ahí están todos tus datos.
+## 6️⃣ Instalación en Otra Computadora
+
+Para instalar en otra PC:
+
+1. **Copia el ejecutable:**
+
+   ```bash
+   # Desde tu PC
+   Copy-Item "C:\Users\ASUS\kairos\dist\*" -Destination "D:\Kairos_dist" -Recurse
+   ```
+
+2. **En la otra PC:**
+
+   ```bash
+   # Pega los archivos
+   # Ejecuta: INICIAR_KAIROS.bat
+   ```
+
+3. **Resultado:**
+   - ✅ Se crea automáticamente `%APPDATA%\Kairos\datos\kairos.db` en la nueva PC
+   - ✅ Datos completamente independientes
+   - ✅ No hay conflictos entre computadoras
+
+## 7️⃣ Actualización del Ejecutable
+
+### ✅ Método Seguro (Recomendado)
+
+Usa el script `ACTUALIZAR_KAIROS.bat`:
+
+```bash
+# Ejecuta el script de actualización
+.\ACTUALIZAR_KAIROS.bat
+```
+
+**Qué hace automáticamente:**
+
+1. ✅ Hace backup de tu BD actual
+2. ✅ Regenera el ejecutable
+3. ✅ Los datos siguen intactos en AppData
+
+### ❌ Método Manual (No recomendado)
+
+```bash
+# ❌ Esto ELIMINA la carpeta dist/ y tus datos si están ahí
+python -m PyInstaller kairos.spec -y
+```
 
 ## 🚀 Flujo Completo
 
-1. **Desarrollo:**
+### Desarrollo:
 
-   ```bash
-   python run.py  # Pruebas en development
-   ```
+```bash
+python run.py  # Pruebas en development
+```
 
-2. **Antes de compilar:**
+### Compilación:
 
-   ```bash
-   pytest  # Verificar que todo funciona
-   ```
+```bash
+python -m PyInstaller kairos.spec -y
+```
 
-3. **Compilar ejecutable:**
+### Distribución:
 
-   ```bash
-   python -m PyInstaller kairos.spec -y
-   ```
+```bash
+# Copia dist/ a otras computadoras
+# Los datos se guardan automáticamente en AppData de cada PC
+```
 
-4. **Usar ejecutable:**
+### Actualización:
 
-   ```bash
-   cd dist
-   .\INICIAR_KAIROS.bat
-   ```
-
-5. **Acceder:**
-   - Abre navegador: `http://localhost:5000`
-   - Login: `admin` / `admin123`
+```bash
+# Usa ACTUALIZAR_KAIROS.bat para preservar datos
+.\ACTUALIZAR_KAIROS.bat
+```
 
 ## 📁 Archivo Spec (kairos.spec)
 
@@ -125,12 +171,16 @@ El archivo `kairos.spec` contiene la configuración de PyInstaller:
 
 ### "Los datos desaparecen al reiniciar"
 
-✅ **SOLUCIONADO** - Se guardan en `dist/datos/kairos.db` (persistente)
+✅ **SOLUCIONADO** - Se guardan en `%APPDATA%\Kairos\datos\kairos.db` (persistente)
+
+### "Los datos desaparecen al actualizar"
+
+✅ **SOLUCIONADO** - AppData no se elimina al regenerar el ejecutable
 
 ### "No puedo loguearme"
 
 - Verifica que escribiste bien: `admin` / `admin123`
-- Si la BD se corrompió, elimina `dist/datos/kairos.db` y reinicia (se crea nuevamente)
+- Si la BD se corrompió, elimina `%APPDATA%\Kairos` y reinicia (se crea nuevamente)
 
 ### "El ejecutable no inicia"
 
@@ -142,10 +192,13 @@ El archivo `kairos.spec` contiene la configuración de PyInstaller:
 
 Para compartir Kairos con otros:
 
-1. Copia la carpeta `dist/` completa
-2. Incluye: `Kairos.exe`, `INICIAR_KAIROS.bat`, carpeta `datos/`
-3. Otros usuarios ejecutan: `INICIAR_KAIROS.bat`
-4. ¡Listo! Los datos se guardan automáticamente
+```
+Kairos_v1.0.zip
+├── Kairos.exe
+├── INICIAR_KAIROS.bat
+├── ACTUALIZAR_KAIROS.bat    ← Para futuras actualizaciones
+└── README.txt
+```
 
 **Ejemplo para compartir:**
 
@@ -153,186 +206,42 @@ Para compartir Kairos con otros:
 Kairos_v1.0.zip
 ├── Kairos.exe
 ├── INICIAR_KAIROS.bat
-├── datos/
-│   └── kairos.db  (inicial vacío, se crea al primer uso)
+├── ACTUALIZAR_KAIROS.bat
 └── README.txt
 ```
 
+**En el archivo zip:**
+
+- ✅ Kairos.exe
+- ✅ INICIAR_KAIROS.bat
+- ✅ ACTUALIZAR_KAIROS.bat (para actualizaciones seguras)
+- ❌ **NO incluir carpeta datos/** (se crea automáticamente en AppData)
+
 ## 🔧 Modificaciones Recientes
 
-**run.py (v3.0):**
+**run.py (v4.0):**
 
-- ✅ Detecta automáticamente si está ejecutando como exe compilado
-- ✅ Crea directorio `dist/datos/` para guardar la BD
-- ✅ Inicializa la BD automáticamente si no existe
-- ✅ Crea usuario admin por defecto
+- ✅ Detecta automáticamente si está como ejecutable compilado
+- ✅ Usa `%APPDATA%\Kairos\datos\` para almacenamiento persistente
+- ✅ Crea directorio automáticamente si no existe
+- ✅ Muestra ubicación de datos en consola
 
-**config.py (v2.0):**
+**config.py (v3.0):**
 
 - ✅ Lee variable de entorno `KAIROS_DATA_DIR`
-- ✅ Guarda la BD en `dist/datos/` cuando está compilado
+- ✅ Guarda BD en ubicación persistente cuando está compilado
 - ✅ Mantiene compatibilidad con desarrollo desde código fuente
+
+**ACTUALIZAR_KAIROS.bat:**
+
+- ✅ Script para actualizar sin perder datos
+- ✅ Hace backup automático antes de regenerar
+- ✅ Restaura datos automáticamente
 
 ## 📝 Notas Finales
 
 - El ejecutable es **standalone** - no necesita Python instalado
 - Los datos están en formato SQLite - puedes abrirlos con cualquier viewer SQLite
 - Los logs se guardan en `dist/logs/`
-- Para actualizar, simplemente recompila: `python -m PyInstaller kairos.spec -y`
-
-### Opción 1: Doble clic en `INICIAR_KAIROS.bat`
-
-```
-dist/INICIAR_KAIROS.bat
-```
-
-### Opción 2: Doble clic directo en `Kairos.exe`
-
-```
-dist/Kairos.exe
-```
-
-## 🔑 Credenciales por Defecto
-
-Al iniciar el ejecutable por primera vez:
-
-```
-Usuario: admin
-Contraseña: admin123
-```
-
-## 📋 Lo que Inicializa Automáticamente
-
-✅ Base de datos SQLite (si no existe)
-✅ Todas las tablas necesarias
-✅ Usuario admin por defecto
-✅ Directorios de logs
-✅ Archivos de configuración
-
-## ⚠️ Problemas Comunes y Soluciones
-
-### ❌ "No se encuentran los templates"
-
-✅ **Solucionado:** El spec file incluye `datas = [('templates', 'templates')]`
-
-### ❌ "Module not found: sqlalchemy"
-
-✅ **Solucionado:** Incluido en `hiddenimports`
-
-### ❌ "Database file not found"
-
-✅ **Solucionado:** El `run.py` detecta si está en ejecutable y crea la BD automáticamente
-
-### ❌ "No se crea usuario admin"
-
-✅ **Solucionado:** `run.py` verifica y lo crea si no existe
-
-### ❌ El ejecutable se cierra inmediatamente
-
-✅ **Solución:** Ejecutar desde `INICIAR_KAIROS.bat` que mantiene la ventana abierta
-
-## 📊 Distribución del Ejecutable
-
-**Para compartir con otros:**
-
-1. Copiar toda la carpeta `dist/` a otra máquina
-2. Doble clic en `INICIAR_KAIROS.bat`
-3. ¡Listo! La aplicación inicia automáticamente
-
-**Tamaño:** ~150-200 MB (incluye todas las dependencias)
-
-## 🛠️ Personalización
-
-Si necesitas cambiar las credenciales por defecto, edita `run.py` en la función `init_database()`:
-
-```python
-admin = User(
-    username="admin",  # Cambiar aquí
-    password=generate_password_hash("admin123"),  # Y aquí
-    nombre="Administrador",
-    rol="admin",
-)
-```
-
-Luego regenera el ejecutable.
-
-## 💡 Optimizaciones Futuras
-
-Para reducir tamaño:
-
-```bash
-python -m PyInstaller kairos.spec --exclude-module=numpy --exclude-module=pandas
-```
-
-Para acelerar inicio:
-
-```bash
-# En spec file cambiar:
-console=True  # a False (sin ventana de consola)
-```
-
----
-
-## 🎯 Resumen Rápido
-
-```bash
-# 1. Instalar PyInstaller (una sola vez)
-pip install pyinstaller
-
-# 2. Regenerar ejecutable
-cd c:\Users\ASUS\kairos
-python -m PyInstaller kairos.spec -y
-
-# 3. Ejecutar
-.\dist\INICIAR_KAIROS.bat
-```
-
-### ❌ El ejecutable se cierra inmediatamente
-
-**Solución:** Asegurar que `console=True` en el spec file
-
-## 🎯 Distribución
-
-Después de generar `Kairos.exe`:
-
-1. **Opción Simple:** Copiar `dist/` carpeta completa a otros PCs
-2. **Opción Profesional:** Crear un instalador NSIS (ver paso siguiente)
-
-## 🚀 Crear Instalador NSIS (Avanzado)
-
-Si quieres un `.exe` instalador:
-
-```bash
-pip install pyinstaller-nsis
-```
-
-Luego crear script NSIS...
-
----
-
-## 📊 Comparativa de Métodos
-
-| Método                  | Tamaño   | Facilidad | Profesional |
-| ----------------------- | -------- | --------- | ----------- |
-| PyInstaller onefile     | 150MB+   | ⭐        | ⭐⭐        |
-| PyInstaller onedir      | 200MB    | ⭐        | ⭐          |
-| Spec file personalizado | 120MB    | ⭐⭐      | ⭐⭐⭐      |
-| NSIS Instalador         | Variable | ⭐⭐⭐    | ⭐⭐⭐⭐    |
-
----
-
-## 💡 Optimizaciones
-
-Para reducir tamaño:
-
-```bash
-# Excluir módulos no usados
-pyinstaller kairos.spec --exclude-module=numpy --exclude-module=pandas
-```
-
-Para acelerar inicio:
-
-```bash
-# Ejecutable sin consola
-# En spec file: console=False
-```
+- Para actualizar, usa `ACTUALIZAR_KAIROS.bat` para preservar datos
+- Cada instalación tiene sus propios datos (independientes)

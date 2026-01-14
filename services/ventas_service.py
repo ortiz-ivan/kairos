@@ -1,4 +1,5 @@
-from datetime import date, datetime
+from collections import Counter, defaultdict
+from datetime import date, datetime, timedelta
 from math import ceil
 
 
@@ -124,4 +125,159 @@ def estadisticas_del_dia(ventas, target_date=None):
         "total_recaudado_hoy": total,
         "venta_mas_grande_hoy": mayor,
         "promedio_por_venta_hoy": promedio,
+    }
+
+
+def ventas_por_mes(ventas, meses_atras=12):
+    """Devuelve ventas agrupadas por mes para los últimos N meses."""
+    hoy = date.today()
+    inicio = hoy.replace(day=1) - timedelta(days=30 * (meses_atras - 1))
+
+    ventas_mensuales = defaultdict(lambda: {"cantidad": 0, "total": 0})
+
+    for venta in ventas:
+        try:
+            fecha_venta = datetime.strptime(str(venta["fecha"])[:10], "%Y-%m-%d").date()
+            if fecha_venta >= inicio:
+                mes_key = fecha_venta.strftime("%Y-%m")
+                ventas_mensuales[mes_key]["cantidad"] += 1
+                ventas_mensuales[mes_key]["total"] += venta.get("total", 0)
+        except (ValueError, KeyError):
+            continue
+
+    # Completar meses faltantes con ceros
+    resultado = []
+    for i in range(meses_atras):
+        mes_actual = (inicio + timedelta(days=30 * i)).replace(day=1)
+        mes_key = mes_actual.strftime("%Y-%m")
+        if mes_key in ventas_mensuales:
+            resultado.append(
+                {
+                    "mes": mes_key,
+                    "cantidad": ventas_mensuales[mes_key]["cantidad"],
+                    "total": ventas_mensuales[mes_key]["total"],
+                }
+            )
+        else:
+            resultado.append({"mes": mes_key, "cantidad": 0, "total": 0})
+
+    return resultado
+
+
+def ventas_por_semana(ventas, semanas_atras=12):
+    """Devuelve ventas agrupadas por semana para las últimas N semanas."""
+    hoy = date.today()
+    inicio = hoy - timedelta(weeks=semanas_atras - 1)
+
+    # Ajustar al inicio de semana (lunes)
+    inicio = inicio - timedelta(days=inicio.weekday())
+
+    ventas_semanales = defaultdict(lambda: {"cantidad": 0, "total": 0})
+
+    for venta in ventas:
+        try:
+            fecha_venta = datetime.strptime(str(venta["fecha"])[:10], "%Y-%m-%d").date()
+            if fecha_venta >= inicio:
+                # Calcular semana del año
+                semana_key = f"{fecha_venta.year}-W{fecha_venta.isocalendar()[1]:02d}"
+                ventas_semanales[semana_key]["cantidad"] += 1
+                ventas_semanales[semana_key]["total"] += venta.get("total", 0)
+        except (ValueError, KeyError):
+            continue
+
+    # Completar semanas faltantes con ceros
+    resultado = []
+    for i in range(semanas_atras):
+        semana_actual = inicio + timedelta(weeks=i)
+        semana_key = f"{semana_actual.year}-W{semana_actual.isocalendar()[1]:02d}"
+        if semana_key in ventas_semanales:
+            resultado.append(
+                {
+                    "semana": semana_key,
+                    "cantidad": ventas_semanales[semana_key]["cantidad"],
+                    "total": ventas_semanales[semana_key]["total"],
+                }
+            )
+        else:
+            resultado.append({"semana": semana_key, "cantidad": 0, "total": 0})
+
+    return resultado
+
+
+def productos_mas_vendidos(ventas, obtener_detalle_fn, top_n=10):
+    """Devuelve los productos más vendidos con sus estadísticas."""
+    contador_productos = Counter()
+    productos_info = {}
+
+    for venta in ventas:
+        detalles = obtener_detalle_fn(venta["id"])
+        for detalle in detalles:
+            nombre = detalle.get("nombre", "Desconocido")
+            cantidad = detalle.get("cantidad", 0)
+            subtotal = detalle.get("subtotal", 0)
+
+            contador_productos[nombre] += cantidad
+            if nombre not in productos_info:
+                productos_info[nombre] = {
+                    "cantidad_total": 0,
+                    "ventas_total": 0,
+                    "precio_promedio": 0,
+                }
+            productos_info[nombre]["cantidad_total"] += cantidad
+            productos_info[nombre]["ventas_total"] += subtotal
+
+    # Calcular precio promedio por producto
+    for nombre, info in productos_info.items():
+        if info["cantidad_total"] > 0:
+            info["precio_promedio"] = info["ventas_total"] / info["cantidad_total"]
+
+    # Obtener top N productos
+    top_productos = contador_productos.most_common(top_n)
+
+    resultado = []
+    for nombre, cantidad in top_productos:
+        info = productos_info.get(nombre, {})
+        resultado.append(
+            {
+                "nombre": nombre,
+                "cantidad_vendida": cantidad,
+                "ventas_total": info.get("ventas_total", 0),
+                "precio_promedio": info.get("precio_promedio", 0),
+            }
+        )
+
+    return resultado
+
+
+def estadisticas_generales(ventas):
+    """Devuelve estadísticas generales de todas las ventas."""
+    if not ventas:
+        return {
+            "total_ventas": 0,
+            "total_recaudado": 0,
+            "venta_promedio": 0,
+            "venta_mas_grande": 0,
+            "venta_mas_pequena": 0,
+            "dias_con_ventas": 0,
+        }
+
+    totales = [v.get("total", 0) for v in ventas]
+    fechas = []
+
+    for v in ventas:
+        try:
+            fecha = datetime.strptime(str(v["fecha"])[:10], "%Y-%m-%d").date()
+            fechas.append(fecha)
+        except (ValueError, KeyError):
+            continue
+
+    dias_unicos = len(set(fechas)) if fechas else 0
+
+    return {
+        "total_ventas": len(ventas),
+        "total_recaudado": sum(totales),
+        "venta_promedio": sum(totales) / len(ventas),
+        "venta_mas_grande": max(totales),
+        "venta_mas_pequena": min(totales) if totales else 0,
+        "dias_con_ventas": dias_unicos,
     }

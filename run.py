@@ -8,15 +8,20 @@ Guarda los datos en una ubicación persistente.
 import os
 import sys
 from pathlib import Path
+
 from werkzeug.security import generate_password_hash
+
+# Importar módulos de la aplicación
+from app import create_app
+from models_alchemy import User, db
 
 # Obtener la ruta base y configurar directorio de datos persistente
 if getattr(sys, "frozen", False):
-    # Ejecutable compilado - guardar datos junto al exe
+    # Ejecutable compilado - guardar datos en AppData (persistente entre actualizaciones)
+    appdata_dir = os.environ.get("APPDATA", os.path.expanduser("~"))
+    DATA_DIR = Path(appdata_dir) / "Kairos" / "datos"
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
     BASE_DIR = Path(sys.executable).parent
-    # Crear directorio de datos en la misma carpeta del ejecutable
-    DATA_DIR = BASE_DIR / "datos"
-    DATA_DIR.mkdir(exist_ok=True)
 else:
     # Ejecución desde código fuente
     BASE_DIR = Path(__file__).parent
@@ -31,10 +36,6 @@ os.chdir(BASE_DIR)
 # Asegurar que los módulos locales se cargan primero
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
-
-# Importar y correr la app
-from app import create_app
-from models_alchemy import User, db
 
 
 def init_database(app):
@@ -73,10 +74,9 @@ if __name__ == "__main__":
     print("=" * 70)
     print("📍 Accede a: http://localhost:5000")
     print("🔑 Credenciales por defecto:")
-    print("   Usuario: admin")
-    print("   Contraseña: admin123")
     print(f"💾 Base de datos: {DATA_DIR / 'kairos.db'}")
-    print("🛑 Presiona CTRL+C para detener la aplicación")
+    print("� Ubicación datos: persistente (AppData)")
+    print("�🛑 Presiona CTRL+C para detener la aplicación")
     print("=" * 70 + "\n")
 
     # Ejecutar en modo desarrollo

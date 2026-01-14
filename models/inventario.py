@@ -22,7 +22,7 @@ def obtener_inventario():
     ]
 
 
-def obtener_stock_bajo(limite=5):
+def obtener_stock_bajo(limite=10):
     """Devuelve productos con stock menor o igual al límite."""
     from sqlalchemy import asc, select
 

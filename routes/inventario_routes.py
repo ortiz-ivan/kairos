@@ -65,7 +65,7 @@ def inventario_view():
     valor_total_inventario = sum(p["stock"] * p["precio"] for p in productos_list)
 
     # Indicadores de stock (calculados sobre la lista completa)
-    stock_bajo_threshold = 5
+    stock_bajo_threshold = 10
     stock_bajo_count = len(
         [p for p in productos_list if p["stock"] <= stock_bajo_threshold]
     )
@@ -74,7 +74,7 @@ def inventario_view():
             p
             for p in productos_list
             if p["stock"] > stock_bajo_threshold
-            and p["stock"] <= stock_bajo_threshold + 5
+            and p["stock"] <= stock_bajo_threshold + 10
         ]
     )
 
@@ -109,7 +109,7 @@ def inventario_view():
     return render_template(
         "inventario.html",
         productos=productos_pagina,
-        stock_bajo=5,
+        stock_bajo=10,
         categorias=categorias,
         filtro_categoria=filtro_categoria,
         total_stock=total_stock,

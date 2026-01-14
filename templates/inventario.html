@@ -115,7 +115,7 @@
                     <td data-sort-value="{{ producto['stock'] }}">
                         {% if producto['stock'] <= stock_bajo %}
                             <span class="badge bg-danger">{{ producto['stock'] }}</span>
-                        {% elif producto['stock'] <= stock_bajo + 5 %}
+                        {% elif producto['stock'] <= stock_bajo + 10 %}
                             <span class="badge bg-warning text-dark">{{ producto['stock'] }}</span>
                         {% else %}
                             <span class="badge bg-success">{{ producto['stock'] }}</span>
@@ -147,12 +147,6 @@
             </tbody>
         </table>
     </div>
-
-    <p class="mt-2">
-        <span class="badge bg-danger">Rojo</span> stock bajo ≤ {{ stock_bajo }},
-        <span class="badge bg-warning text-dark">Amarillo</span> stock medio,
-        <span class="badge bg-success">Verde</span> stock suficiente
-    </p>
 
     <!-- Paginación -->
     {% if total_pages is defined and total_pages > 1 %}
