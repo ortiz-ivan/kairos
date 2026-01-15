@@ -1,0 +1,77 @@
+<!-- Filtros y Búsqueda -->
+<div class="row mb-4 g-3">
+    <div class="col-md-12">
+        <form method="GET" class="row g-3" id="filtrosForm">
+            <!-- Búsqueda General -->
+            <div class="col-md-12">
+                <label for="search" class="form-label"><i class="bi bi-search"></i> Búsqueda (ID, Usuario, Producto)</label>
+                <input
+                    type="text"
+                    id="search"
+                    name="search"
+                    class="form-control"
+                    placeholder="Ej: 1, admin, Arroz..."
+                    value="{{ search_query }}"
+                >
+            </div>
+
+            <!-- Filtros en Filas -->
+            <div class="col-md-6">
+                <label for="usuario" class="form-label"><i class="bi bi-person"></i> Filtrar por Usuario</label>
+                <select id="usuario" name="usuario" class="form-select">
+                    <option value="">-- Todos los usuarios --</option>
+                    {% for usuario in usuarios_unicos %}
+                    <option value="{{ usuario }}" {% if usuario_filtro == usuario %}selected{% endif %}>
+                        {{ usuario }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label for="monto_minimo" class="form-label"><i class="bi bi-currency-dollar"></i> Monto Mínimo (₲)</label>
+                <input
+                    type="number"
+                    id="monto_minimo"
+                    name="monto_minimo"
+                    class="form-control"
+                    placeholder="Ej: 100000"
+                    value="{{ monto_minimo }}"
+                    min="0"
+                >
+            </div>
+
+            <div class="col-md-6">
+                <label for="fecha_desde" class="form-label"><i class="bi bi-calendar-event"></i> Desde</label>
+                <input
+                    type="date"
+                    id="fecha_desde"
+                    name="fecha_desde"
+                    class="form-control"
+                    value="{{ fecha_desde }}"
+                >
+            </div>
+
+            <div class="col-md-6">
+                <label for="fecha_hasta" class="form-label"><i class="bi bi-calendar-event"></i> Hasta</label>
+                <input
+                    type="date"
+                    id="fecha_hasta"
+                    name="fecha_hasta"
+                    class="form-control"
+                    value="{{ fecha_hasta }}"
+                >
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="col-md-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Aplicar Filtros
+                </button>
+                <a href="{{ url_for('registros.listado_registros') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-counterclockwise"></i> Limpiar Filtros
+                </a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,36 @@
+<!-- Estadísticas Generales -->
+{% import "macros.html" as macros %}
+<div class="row mb-4 g-3">
+    {{ macros.stat_card(
+        "Total Ventas",
+        estadisticas_general.total_ventas|int,
+        "en " + estadisticas_general.dias_con_ventas|string + " días",
+        "bi-receipt",
+        "bg-primary"
+    ) }}
+
+    {{ macros.stat_card(
+        "Total Recaudado",
+        "₲" + "{:,.0f}".format(estadisticas_general.total_recaudado),
+        "acumulado",
+        "bi-cash-coin",
+        "bg-success"
+    ) }}
+
+    {{ macros.stat_card(
+        "Venta Promedio",
+        "₲" + "{:,.0f}".format(estadisticas_general.venta_promedio),
+        "por transacción",
+        "bi-calculator",
+        "bg-info"
+    ) }}
+
+    {{ macros.stat_card(
+        "Venta Mayor",
+        "₲" + "{:,.0f}".format(estadisticas_general.venta_mas_grande),
+        "máximo histórico",
+        "bi-trophy",
+        "bg-warning",
+        "text-dark"
+    ) }}
+</div>

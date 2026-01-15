@@ -1,0 +1,175 @@
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configuración común para gráficos
+    Chart.defaults.font.family = 'Roboto, sans-serif';
+    Chart.defaults.plugins.legend.display = true;
+
+    // Datos para gráficos
+    const ventasMensuales = {{ ventas_mensuales|tojson }};
+    const ventasSemanales = {{ ventas_semanales|tojson }};
+    const topProductos = {{ top_productos|tojson }};
+
+    // Gráfico de Ventas por Mes
+    const ctxMensual = document.getElementById('ventasMensualesChart').getContext('2d');
+    new Chart(ctxMensual, {
+        type: 'line',
+        data: {
+            labels: ventasMensuales.map(item => {
+                const [year, month] = item.mes.split('-');
+                const date = new Date(year, month - 1);
+                return date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+            }),
+            datasets: [{
+                label: 'Cantidad de Ventas',
+                data: ventasMensuales.map(item => item.cantidad),
+                borderColor: 'rgb(13, 110, 253)',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                yAxisID: 'y',
+                tension: 0.4
+            }, {
+                label: 'Total Recaudado (₲)',
+                data: ventasMensuales.map(item => item.total),
+                borderColor: 'rgb(25, 135, 84)',
+                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                yAxisID: 'y1',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Tendencia de Ventas Mensuales'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (context.datasetIndex === 1) {
+                                return context.dataset.label + ': ₲' + context.parsed.y.toLocaleString();
+                            }
+                            return context.dataset.label + ': ' + context.parsed.y;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Cantidad de Ventas'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Total Recaudado (₲)'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '₲' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de Ventas por Semana
+    const ctxSemanal = document.getElementById('ventasSemanalesChart').getContext('2d');
+    new Chart(ctxSemanal, {
+        type: 'bar',
+        data: {
+            labels: ventasSemanales.map(item => {
+                const [year, week] = item.semana.split('-W');
+                return `Sem ${week}/${year.slice(-2)}`;
+            }),
+            datasets: [{
+                label: 'Ventas por Semana',
+                data: ventasSemanales.map(item => item.cantidad),
+                backgroundColor: 'rgba(13, 202, 240, 0.8)',
+                borderColor: 'rgb(13, 202, 240)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Ventas por Semana (Últimas 8 semanas)'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Cantidad de Ventas'
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de Productos Más Vendidos
+    const ctxProductos = document.getElementById('topProductosChart').getContext('2d');
+    new Chart(ctxProductos, {
+        type: 'doughnut',
+        data: {
+            labels: topProductos.map(item => item.nombre.length > 20 ? item.nombre.substring(0, 20) + '...' : item.nombre),
+            datasets: [{
+                data: topProductos.map(item => item.cantidad_vendida),
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 205, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Productos Más Vendidos'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const item = topProductos[context.dataIndex];
+                            return [
+                                `Producto: ${item.nombre}`,
+                                `Cantidad: ${item.cantidad_vendida}`,
+                                `Total: ₲${item.ventas_total.toLocaleString()}`
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>

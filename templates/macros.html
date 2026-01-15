@@ -1,0 +1,167 @@
+"""
+Macros Jinja2 para componentes reutilizables en templates.
+
+Proporciona macros para tarjetas, gráficos, tablas y otros componentes
+comunes en la aplicación Kairos.
+"""
+
+{% macro stat_card(title, value, subtitle, icon_class, bg_class='bg-primary', text_class='text-white') %}
+<div class="col-md-3">
+    <div class="card border-0 shadow-sm {{ bg_class }} {{ text_class }} h-100">
+        <div class="card-body d-flex align-items-center">
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="bi {{ icon_class }} me-2" style="font-size: 1.5rem;"></i>
+                    <small class="opacity-75">{{ title }}</small>
+                </div>
+                <h3 class="mb-0">{{ value }}</h3>
+                <small class="opacity-75">{{ subtitle }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro mini_stat_card(title, value, subtitle, icon_class, icon_color='text-primary') %}
+<div class="col-md-3">
+    <div class="card border-0 shadow-sm bg-light">
+        <div class="card-body text-center">
+            <i class="bi {{ icon_class }} {{ icon_color }}" style="font-size: 2rem;"></i>
+            <h5 class="mt-2">{{ value }}</h5>
+            <small class="text-muted">{{ subtitle }}</small>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro chart_card(title, chart_id, chart_type='line', height='300', bg_class='bg-primary') %}
+<div class="col-lg-{{ '8' if chart_type == 'line' else '4' }}">
+    <div class="card shadow-sm h-100">
+        <div class="card-header {{ bg_class }} text-white">
+            <h5 class="mb-0"><i class="bi bi-{{ 'bar-chart' if chart_type == 'line' else 'star' if chart_type == 'doughnut' else 'graph-up-arrow' }}"></i> {{ title }}</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="{{ chart_id }}" height="{{ height }}"></canvas>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro filter_input(label, input_id, input_name, input_type='text', placeholder='', value='', icon_class='bi-search', additional_attrs='') %}
+<div class="col-md-6">
+    <label for="{{ input_id }}" class="form-label"><i class="bi {{ icon_class }}"></i> {{ label }}</label>
+    <input
+        type="{{ input_type }}"
+        id="{{ input_id }}"
+        name="{{ input_name }}"
+        class="form-control"
+        placeholder="{{ placeholder }}"
+        value="{{ value }}"
+        {{ additional_attrs }}
+    >
+</div>
+{% endmacro %}
+
+{% macro filter_select(label, select_id, select_name, options, selected_value='', icon_class='bi-person') %}
+<div class="col-md-6">
+    <label for="{{ select_id }}" class="form-label"><i class="bi {{ icon_class }}"></i> {{ label }}</label>
+    <select id="{{ select_id }}" name="{{ select_name }}" class="form-select">
+        <option value="">-- Todos --</option>
+        {% for option in options %}
+        <option value="{{ option }}" {% if selected_value == option %}selected{% endif %}>
+            {{ option }}
+        </option>
+        {% endfor %}
+    </select>
+</div>
+{% endmacro %}
+
+{% macro pagination_nav(current_page, total_pages, base_url, query_string='') %}
+{% if total_pages and total_pages > 1 %}
+<nav aria-label="Paginación" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if current_page > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="{{ base_url }}{% if query_string %}?{{ query_string }}&page={{ current_page-1 }}{% else %}?page={{ current_page-1 }}{% endif %}">Anterior</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+        {% endif %}
+
+        {% for p in range(1, total_pages+1) %}
+        <li class="page-item {% if p == current_page %}active{% endif %}">
+            <a class="page-link" href="{{ base_url }}{% if query_string %}?{{ query_string }}&page={{ p }}{% else %}?page={{ p }}{% endif %}">{{ p }}</a>
+        </li>
+        {% endfor %}
+
+        {% if current_page < total_pages %}
+        <li class="page-item">
+            <a class="page-link" href="{{ base_url }}{% if query_string %}?{{ query_string }}&page={{ current_page+1 }}{% else %}?page={{ current_page+1 }}{% endif %}">Siguiente</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro venta_modal(venta_id, venta, obtener_detalle_fn) %}
+<div class="modal fade" id="modal-productos-{{ venta_id }}" tabindex="-1" aria-labelledby="modalLabel-{{ venta_id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel-{{ venta_id }}">Detalle de Venta #{{ venta_id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-borderless mb-0">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">Subtotal (₲)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detalle in obtener_detalle_fn(venta_id) %}
+                            <tr>
+                                <td>{{ detalle["nombre"] }}</td>
+                                <td class="text-center">{{ detalle["cantidad"] }}</td>
+                                <td class="text-end">₲{{ detalle["subtotal"]|int }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro empty_state(message='No se encontraron resultados.', icon='bi-inbox') %}
+<tr>
+    <td colspan="5" class="text-center text-muted py-4">
+        <i class="bi {{ icon }}" style="font-size: 2rem;"></i>
+        <p class="mt-2">{{ message }}</p>
+    </td>
+</tr>
+{% endmacro %}
+
+{% macro filter_alert(search_query, usuario_filtro, fecha_desde, fecha_hasta, monto_minimo, current_count, total_count) %}
+{% if search_query or usuario_filtro or fecha_desde or fecha_hasta or monto_minimo %}
+<div class="alert alert-info mb-4" role="alert">
+    <i class="bi bi-info-circle"></i> Se muestran <strong>{{ current_count }}</strong> venta(s) de <strong>{{ total_count }}</strong> total(es)
+    {% if search_query %}<br><small>• Búsqueda: "{{ search_query }}"</small>{% endif %}
+    {% if usuario_filtro %}<br><small>• Usuario: {{ usuario_filtro }}</small>{% endif %}
+    {% if monto_minimo %}<br><small>• Monto mínimo: ₲{{ monto_minimo }}</small>{% endif %}
+    {% if fecha_desde %}<br><small>• Desde: {{ fecha_desde }}</small>{% endif %}
+    {% if fecha_hasta %}<br><small>• Hasta: {{ fecha_hasta }}</small>{% endif %}
+</div>
+{% endif %}
+{% endmacro %}

@@ -1,0 +1,46 @@
+<!-- Estadísticas Diarias -->
+<div class="row mb-4 g-3">
+    <div class="col-12">
+        <h4 class="mb-3"><i class="bi bi-calendar-day"></i> Resumen de Hoy</h4>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-light">
+            <div class="card-body text-center">
+                <i class="bi bi-graph-up text-primary" style="font-size: 2rem;"></i>
+                <h5 class="mt-2">{{ estadisticas.cantidad_ventas_hoy }}</h5>
+                <small class="text-muted">Ventas Hoy</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-light">
+            <div class="card-body text-center">
+                <i class="bi bi-currency-dollar text-success" style="font-size: 2rem;"></i>
+                <h5 class="mt-2">₲{{ '{:,.0f}'.format(estadisticas.total_recaudado_hoy) }}</h5>
+                <small class="text-muted">Total Hoy</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-light">
+            <div class="card-body text-center">
+                <i class="bi bi-trophy text-warning" style="font-size: 2rem;"></i>
+                <h5 class="mt-2">₲{{ '{:,.0f}'.format(estadisticas.venta_mas_grande_hoy) }}</h5>
+                <small class="text-muted">Venta Mayor</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-light">
+            <div class="card-body text-center">
+                <i class="bi bi-calculator text-info" style="font-size: 2rem;"></i>
+                <h5 class="mt-2">₲{{ '{:,.0f}'.format(estadisticas.promedio_por_venta_hoy) }}</h5>
+                <small class="text-muted">Promedio</small>
+            </div>
+        </div>
+    </div>
+</div>
