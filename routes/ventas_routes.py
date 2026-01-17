@@ -107,7 +107,6 @@ def agregar_venta_view():
                 f"Venta registrada - Usuario: {g.usuario['username']}, "
                 f"Productos: {cantidad_productos}, Mensaje: {mensaje}"
             )
-            flash("Venta registrada correctamente.", "success")
         else:
             logger.error(
                 f"Fallo al registrar venta para usuario {g.usuario['username']}: {mensaje}"

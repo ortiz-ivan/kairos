@@ -1,0 +1,195 @@
+{#
+Macros reutilizables para el módulo de ventas.
+Proporciona componentes separados por responsabilidad.
+#}
+
+{# ==========================================
+   COMPONENTE: Vista previa del producto
+   Responsabilidad: Mostrar información del producto seleccionado
+========================================== #}
+{% macro product_preview(id='previewProducto') %}
+<div id="{{ id }}" class="card mt-3" style="display: none; border-left: 4px solid #198754; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <div class="card-body py-2 px-3">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <small class="text-muted d-block">Producto</small>
+                <strong id="previewNombre" class="text-dark"></strong>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">Precio</small>
+                <strong id="previewPrecio" class="text-success"></strong>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">Stock</small>
+                <strong id="previewStock" class="text-info"></strong>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-12">
+                <small class="text-muted d-block">Categoría</small>
+                <span id="previewCategoria" class="badge bg-secondary"></span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# ==========================================
+   COMPONENTE: Campo de búsqueda con código de barras
+   Responsabilidad: Input para escaneo/búsqueda de productos
+========================================== #}
+{% macro barcode_input() %}
+<div class="mb-3">
+    <label for="codigo_barras" class="form-label">Código de Barras</label>
+    <div class="input-group">
+        <input type="text" id="codigo_barras" class="form-control"
+               placeholder="Escanee o ingrese el código de barras..." list="sugerencias"
+               autocomplete="off">
+        <button type="button" class="btn btn-primary" id="btnBuscarModal" title="Buscar producto por nombre">
+            <i class="bi bi-search"></i> Buscar
+        </button>
+    </div>
+    <datalist id="sugerencias"></datalist>
+    <small class="form-text text-muted">Presione Enter para agregar por código, o use el botón Buscar para seleccionar por nombre</small>
+
+    {{ product_preview() }}
+
+    <div id="mensaje_error" class="alert alert-danger mt-2" style="display: none; margin-bottom: 0;"></div>
+</div>
+{% endmacro %}
+
+{# ==========================================
+   COMPONENTE: Tabla de productos agregados
+   Responsabilidad: Mostrar lista de productos en la venta
+========================================== #}
+{% macro products_table() %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Código</th>
+                <th>Producto</th>
+                <th>Precio (₲)</th>
+                <th>Cantidad</th>
+                <th>Subtotal (₲)</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Productos agregados dinámicamente -->
+        </tbody>
+    </table>
+</div>
+{% endmacro %}
+
+{# ==========================================
+   COMPONENTE: Panel resumen POS (derecha)
+   Responsabilidad: Mostrar total, items y botón de registro
+========================================== #}
+{% macro summary_panel() %}
+<div class="card shadow-sm sticky-top" style="top: 1rem;">
+    <div class="card-body text-center">
+        <small class="text-muted d-block">TOTAL A PAGAR</small>
+        <h1 id="total_venta_grande" class="display-5 text-success mb-1" style="font-weight:800;">₲0</h1>
+        <p id="total_venta_letras" class="text-muted mb-3" style="font-size:0.95rem;">Cero guaraníes</p>
+
+        <div class="mb-3">
+            <span class="d-block text-muted">Ítems</span>
+            <h4 id="total_items_count" class="mb-0">0</h4>
+        </div>
+
+        <div class="d-grid gap-2 mb-3">
+            <button type="submit" class="btn btn-success btn-lg" id="btnRegistrar">
+                <i class="bi bi-check-circle"></i> Registrar Venta
+            </button>
+        </div>
+
+        <div class="text-start small text-muted">
+            <div>Productos sin stock: <span id="productos_sin_stock">0</span></div>
+            <div>Errores: <span id="errores_count">0</span></div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# ==========================================
+   COMPONENTE: Modal de búsqueda de productos
+   Responsabilidad: Interfaz alternativa para buscar por nombre
+========================================== #}
+{% macro search_modal() %}
+<div class="modal fade" id="modalBuscarProducto" tabindex="-1" aria-labelledby="modalBuscarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalBuscarLabel">Buscar Producto por Nombre</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" id="inputBuscarProducto" class="form-control form-control-lg"
+                           placeholder="Ingrese nombre, código o categoría del producto..." autocomplete="off">
+                    <small class="form-text text-muted d-block mt-2">
+                        Comience a escribir para ver productos que coincidan...
+                    </small>
+                </div>
+
+                <!-- Spinner de carga -->
+                <div id="spinnerCargando" class="text-center" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+
+                <!-- Tabla de resultados -->
+                <div class="table-responsive" id="tablaResultadosContainer" style="display: none;">
+                    <table class="table table-hover table-striped align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Código</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaResultados">
+                            <!-- Resultados se cargan aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mensaje cuando no hay resultados -->
+                <div id="sinResultados" class="alert alert-info" style="display: none;">
+                    <i class="bi bi-info-circle"></i> No se encontraron productos que coincidan con la búsqueda.
+                </div>
+
+                <!-- Mensaje inicial -->
+                <div id="mensajeInicial" class="text-center text-muted">
+                    <i class="bi bi-search" style="font-size: 2rem; opacity: 0.5;"></i>
+                    <p class="mt-2">Comience a escribir para buscar productos...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# ==========================================
+   COMPONENTE: Alertas flash
+   Responsabilidad: Mostrar mensajes del servidor
+========================================== #}
+{% macro flash_messages() %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} mt-2">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+{% endmacro %}

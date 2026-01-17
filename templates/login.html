@@ -1,21 +1,170 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-4">
-            <h3>Iniciar Sesión</h3>
-            <form method="POST">
-                <div class="mb-3">
-                    <label class="form-label">Usuario</label>
-                    <input type="text" name="username" class="form-control" required>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kairos - Iniciar Sesión</title>
+
+    <!-- Design System CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/design-system.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+
+    <style>
+        /* Logo SVG estilos */
+        .login-logo svg {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="login-page">
+    <!-- Container de alertas para mensajes del servidor -->
+    <div class="alerts-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;"></div>
+
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Header / Logo -->
+            <div class="login-header">
+                <h1 class="login-title">Kairos</h1>
+                <p class="login-subtitle">Gestión de ventas e inventario</p>
+            </div>
+
+            <!-- Alertas de servidor -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'error' if category == 'error' else category }} animate-slide-in">
+                            <span class="alert-icon">
+                                {% if category == 'error' %}
+                                    ✗
+                                {% elif category == 'success' %}
+                                    ✓
+                                {% elif category == 'warning' %}
+                                    ⚠
+                                {% else %}
+                                    ℹ
+                                {% endif %}
+                            </span>
+                            <div class="alert-content">{{ message }}</div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Formulario de Login -->
+            <form class="login-form" id="loginForm" method="POST" novalidate>
+                <!-- Campo Usuario -->
+                <div class="form-group">
+                    <label for="username">
+                        Usuario
+                        <span class="required">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        autocomplete="username"
+                        spellcheck="false"
+                        required
+                    >
+                    <span class="help-text">Ingresa tu usuario</span>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Contraseña</label>
-                    <input type="password" name="password" class="form-control" required>
+
+                <!-- Campo Contraseña -->
+                <div class="form-group password-toggle">
+                    <label for="password">
+                        Contraseña
+                        <span class="required">*</span>
+                    </label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="••••••••••"
+                        autocomplete="current-password"
+                        required
+                    >
+                    <button
+                        type="button"
+                        class="password-toggle-btn"
+                        title="Mostrar/ocultar contraseña"
+                        aria-label="Mostrar/ocultar contraseña"
+                    >
+                        <!-- Ícono ojo -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
                 </div>
-                <button type="submit" class="btn btn-success w-100">Acceder</button>
+
+                <!-- Botón Submit -->
+                <button type="submit" class="login-button" id="submitBtn">
+                    Acceder a Kairos
+                </button>
             </form>
+
+            <!-- Footer -->
+            <div class="login-footer">
+                <div style="font-size: var(--font-size-small); color: var(--text-secondary);">
+                    © 2026 Kairos. Todos los derechos reservados.
+                </div>
+            </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <!-- Form Validation Script -->
+    <script src="{{ url_for('static', filename='js/form-validation.js') }}"></script>
+
+    <script>
+        // Inicializar validador
+        const loginValidator = new FormValidator('#loginForm');
+
+        // Agregar reglas de validación
+        loginValidator
+            .addRule('username', [
+                ValidationRules.required
+            ])
+            .addRule('password', [
+                ValidationRules.required,
+                ValidationRules.minLength(6)
+            ]);
+
+        // Override del submit para mostrar feedback
+        loginValidator.submitForm = function() {
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.textContent;
+
+            // Mostrar loading
+            LoadingState.enable('#submitBtn');
+
+            // Pequeño delay para UX (simular proceso)
+            setTimeout(() => {
+                // Permitir que el servidor maneje la lógica
+                this.form.submit();
+            }, 300);
+        };
+
+        // Manejo de tecla Enter en contraseña
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('loginForm').dispatchEvent(
+                    new Event('submit')
+                );
+            }
+        });
+
+        // Mostrar alertas del servidor en el contenedor
+        document.addEventListener('DOMContentLoaded', () => {
+            // Las alertas ya están en el HTML, aquí pueden agregarse eventos si es necesario
+
+            // Focus en usuario si está vacío
+            const usernameInput = document.getElementById('username');
+            if (usernameInput && !usernameInput.value) {
+                usernameInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>

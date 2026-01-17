@@ -34,8 +34,8 @@ def validar_datos_producto(
     # Validar nombre
     if not nombre:
         return False, "El nombre del producto no puede estar vacío."
-    if len(nombre) > 20:
-        return False, "El nombre del producto no puede exceder 20 caracteres."
+    if len(nombre) > 50:
+        return False, "El nombre del producto no puede exceder 50 caracteres."
 
     # Validar código de barras
     if not codigo_barras:

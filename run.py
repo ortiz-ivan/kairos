@@ -43,13 +43,19 @@ def init_database(app):
     with app.app_context():
         # Crear todas las tablas
         print("📊 Inicializando base de datos...")
-        print(f"📁 Ubicación: {DATA_DIR / 'kairos.db'}")
+        db_path = DATA_DIR / "kairos.db"
+        print(f"📁 Ubicación: {db_path}")
+        print(f"📁 Existe archivo: {db_path.exists()}")
         db.create_all()
         print("✅ Tablas creadas/verificadas")
 
         # Crear usuario admin si no existe
+        print("🔍 Buscando usuario admin...")
         admin_exists = db.session.query(User).filter_by(username="admin").first()
-        if not admin_exists:
+        print(f"🔍 Admin encontrado: {admin_exists is not None}")
+        if admin_exists:
+            print(f"✅ Usuario admin ya existe: {admin_exists.username}")
+        else:
             print("👤 Creando usuario administrador...")
             admin = User(
                 username="admin",
@@ -59,12 +65,14 @@ def init_database(app):
             )
             db.session.add(admin)
             db.session.commit()
-        else:
-            print("✅ Usuario admin ya existe")
+            print("✅ Usuario admin creado")
 
 
 if __name__ == "__main__":
     app = create_app()
+
+    print(f"🔧 DATABASE_URL: {app.config.get('SQLALCHEMY_DATABASE_URI')}")
+    print(f"🔧 KAIROS_DATA_DIR: {os.environ.get('KAIROS_DATA_DIR')}")
 
     # Inicializar la BD
     init_database(app)

@@ -18,7 +18,6 @@ def login():
             session["user_id"] = usuario["id"]
             session["rol"] = usuario["rol"]
             logger.info(f"Login exitoso para usuario: {username}")
-            flash("Bienvenido", "success")
             return redirect(url_for("ventas.agregar_venta_view"))
         else:
             logger.warning(f"Intento de login fallido para usuario: {username}")
