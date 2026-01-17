@@ -11,12 +11,12 @@
 ### Propósito
 
 El proyecto demuestra una arquitectura profesional de aplicación web moderna con:
-- ✅ Diseño UX/UI especializado en dark mode para uso intensivo
-- ✅ Backend Flask escalable con SQLAlchemy ORM
-- ✅ Sistema modular de JavaScript sin dependencias externas
-- ✅ Arquitectura responsable y mantenible
-- ✅ Documentación técnica exhaustiva
-- ✅ Preparado para producción (Docker, Gunicorn, Nginx)
+- Diseño UX/UI especializado en dark mode para uso intensivo
+- Backend Flask escalable con SQLAlchemy ORM
+- Sistema modular de JavaScript sin dependencias externas
+- Arquitectura responsable y mantenible
+- Documentación técnica exhaustiva
+- Preparado para producción (Docker, Gunicorn, Nginx)
 
 ---
 
@@ -143,7 +143,7 @@ kairos/
 
 ---
 
-## 🎨 Sistema de Diseño
+## Sistema de Diseño
 
 El proyecto implementa un **sistema de diseño profesional** basado en principios SaaS:
 
@@ -158,24 +158,24 @@ El proyecto implementa un **sistema de diseño profesional** basado en principio
 ```
 
 ### Componentes
-- ✅ Botones (4 variantes × 3 tamaños)
-- ✅ Inputs (5 estados: default, focus, error, disabled, loading)
-- ✅ Cards (header, body, footer)
-- ✅ Forms con validación progresiva
-- ✅ Alertas (success, error, warning, info)
-- ✅ Tablas responsivas
+- Botones (4 variantes × 3 tamaños)
+- Inputs (5 estados: default, focus, error, disabled, loading)
+- Cards (header, body, footer)
+- Forms con validación progresiva
+- Alertas (success, error, warning, info)
+- Tablas responsivas
 
 ---
 
 ## Seguridad
 
-- ✅ Contraseñas hasheadas con Werkzeug (PBKDF2)
-- ✅ Sesiones seguras con SECRET_KEY
-- ✅ CSRF protection (Flask-WTF)
-- ✅ Decoradores @login_required y @admin_required
-- ✅ Control de acceso basado en roles (RBAC)
-- ✅ Validación en cliente y servidor
-- ✅ Sanitización de inputs
+- Contraseñas hasheadas con Werkzeug (PBKDF2)
+- Sesiones seguras con SECRET_KEY
+- CSRF protection (Flask-WTF)
+- Decoradores @login_required y @admin_required
+- Control de acceso basado en roles (RBAC)
+- Validación en cliente y servidor
+- Sanitización de inputs
 
 ---
 
@@ -233,11 +233,11 @@ pytest tests/
 ```
 
 Cobertura:
-- ✅ Error handlers (404, 500)
-- ✅ Logging configuration
-- ✅ CRUD de productos
-- ✅ Setup de aplicación
-- ✅ Flujo completo de ventas
+- Error handlers (404, 500)
+- Logging configuration
+- CRUD de productos
+- Setup de aplicación
+- Flujo completo de ventas
 
 ---
 
@@ -330,9 +330,6 @@ Este proyecto demuestra:
 
 ---
 
-## 📧 Contacto
-
-**Desarrollador:** Proyecto personal  
 **Última actualización:** 17 de enero de 2026
 
 ---
@@ -343,4 +340,4 @@ Este proyecto demuestra:
 ### Este es un Proyecto Personal
 - Demuestra habilidades en desarrollo full-stack
 - Muestra arquitectura profesional y mejores prácticas
-- Sirve como portfolio técnico
+- Sirve como portafolio técnico
