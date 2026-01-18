@@ -3,79 +3,326 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0D1117">
     <title>Kairos</title>
+
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Design System CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/design-system.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ventas.css') }}">
+
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f8f9fa;
+        /* Navbar personalizado con Design System */
+        .navbar-kairos {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-default);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-sm);
         }
-        .content-container {
-            background-color: #ffffff;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.1);
+
+        .navbar-kairos .navbar-brand {
+            font-weight: var(--font-weight-bold);
+            font-size: var(--font-size-h3);
+            letter-spacing: 0.5px;
+            color: var(--color-primary) !important;
+            transition: all var(--transition-fast);
         }
-        .navbar-brand {
-            font-weight: 700;
-            letter-spacing: 1px;
+
+        .navbar-kairos .navbar-brand:hover {
+            color: var(--color-primary-hover) !important;
+            transform: translateY(-1px);
         }
+
+        .navbar-kairos .nav-link {
+            color: var(--text-secondary) !important;
+            font-weight: var(--font-weight-medium);
+            font-size: var(--font-size-body);
+            transition: all var(--transition-fast);
+            padding: var(--space-sm) var(--space-md) !important;
+            margin: 0 var(--space-xs);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .navbar-kairos .nav-link:hover {
+            color: var(--color-primary) !important;
+            background-color: var(--bg-hover);
+        }
+
+        .navbar-kairos .nav-link.active {
+            color: var(--color-primary) !important;
+            background-color: var(--bg-focus);
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .navbar-kairos .nav-link i {
+            font-size: 16px;
+        }
+
+        .navbar-user {
+            color: var(--text-primary) !important;
+            font-weight: var(--font-weight-medium);
+            font-size: var(--font-size-body);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .btn-logout {
+            background-color: var(--bg-hover);
+            border: 1px solid var(--border-default);
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
+            font-weight: var(--font-weight-medium);
+        }
+
+        .btn-logout:hover {
+            background-color: var(--color-danger);
+            border-color: var(--color-danger);
+            color: white;
+        }
+
+        /* Layout principal */
+        .main-container {
+            min-height: calc(100vh - 120px);
+            padding-top: var(--space-lg);
+            padding-bottom: var(--space-lg);
+        }
+
+        .content-wrapper {
+            background-color: var(--bg-primary);
+        }
+
+        /* Estilos de alertas con Design System */
+        .alert-success {
+            background-color: var(--color-success-light);
+            border: 1px solid var(--color-success);
+            color: var(--text-primary);
+        }
+
+        .alert-success .alert-heading {
+            color: var(--color-success);
+        }
+
+        .alert-danger {
+            background-color: var(--color-danger-light);
+            border: 1px solid var(--color-danger);
+            color: var(--text-primary);
+        }
+
+        .alert-danger .alert-heading {
+            color: var(--color-danger);
+        }
+
+        .alert-warning {
+            background-color: var(--color-warning-light);
+            border: 1px solid var(--color-warning);
+            color: var(--text-primary);
+        }
+
+        .alert-warning .alert-heading {
+            color: var(--color-warning);
+        }
+
+        .alert-info {
+            background-color: var(--color-info-light);
+            border: 1px solid var(--color-info);
+            color: var(--text-primary);
+        }
+
+        .alert-info .alert-heading {
+            color: var(--color-info);
+        }
+
         .flash-message {
-            margin-bottom: 1rem;
+            margin-bottom: var(--space-md);
+            border-radius: var(--radius-md);
+            animation: slideIn var(--transition-fast) ease-out;
+            padding: var(--space-md);
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .flash-message i {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        .flash-message.fade-out {
+            animation: fadeOut var(--transition-fast) ease-out forwards;
+        }
+
+        /* Footer */
+        .footer-kairos {
+            background-color: var(--bg-secondary);
+            border-top: 1px solid var(--border-default);
+            margin-top: auto;
+            padding: var(--space-lg) var(--space-md);
+            color: var(--text-secondary);
+            font-size: var(--font-size-small);
+            text-align: center;
+        }
+
+        /* Navbar toggler personalizado */
+        .navbar-toggler {
+            border-color: var(--border-default) !important;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 0.25rem var(--color-primary-light) !important;
+            border-color: var(--color-primary) !important;
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23E5E7EB' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        /* Responsive */
+        @media (max-width: 991.98px) {
+            .navbar-kairos .nav-link {
+                padding: var(--space-md) 0 !important;
+                margin: var(--space-sm) 0;
+            }
+
+            .main-container {
+                padding-top: var(--space-md);
+                padding-bottom: var(--space-md);
+            }
         }
     </style>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% if g.usuario %}{{ url_for('ventas.agregar_venta_view') }}{% else %}{{ url_for('auth.login') }}{% endif %}">Kairos</a>
+<body class="content-wrapper">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-kairos sticky-top">
+        <div class="container-fluid px-3">
+            <!-- Brand -->
+            <a class="navbar-brand" href="{% if g.usuario %}{{ url_for('ventas.agregar_venta_view') }}{% else %}{{ url_for('auth.login') }}{% endif %}">
+                <i class="bi bi-graph-up-arrow"></i> Kairos
+            </a>
+
+            <!-- Toggler para mobile -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Abrir navegación">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
+            <!-- Navegacion -->
             <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Menu izquierdo -->
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     {% if g.usuario %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'productos.productos_list' %}active{% endif %}" href="{{ url_for('productos.productos_list') }}"><i class="bi bi-box"></i> Productos</a>
-                    </li>
-                    {% if g.usuario['rol'] == 'admin' %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'registros.listado_registros' %}active{% endif %}" href="{{ url_for('registros.listado_registros') }}"><i class="bi bi-file-earmark-text"></i> Registros</a>
-                    </li>
-                    {% endif %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'ventas.agregar_venta_view' %}active{% endif %}" href="{{ url_for('ventas.agregar_venta_view') }}"><i class="bi bi-plus-circle"></i> Ventas</a>
-                    </li>
+                        <!-- Ventas -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'ventas.agregar_venta_view' %}active{% endif %}"
+                               href="{{ url_for('ventas.agregar_venta_view') }}"
+                               title="Registrar nuevas ventas">
+                                <i class="bi bi-cart-plus"></i>
+                                <span>Ventas</span>
+                            </a>
+                        </li>
 
-                    {% if g.usuario['rol'] == 'admin' %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('inventario') %}active{% endif %}" href="{{ url_for('inventario.inventario_view') }}"><i class="bi bi-clipboard-list"></i> Inventario</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}"
-                           href="{{ url_for('admin.admin_usuarios') }}">
-                            <i class="bi bi-gear"></i> Panel Admin
-                        </a>
-                    </li>
-                    {% endif %}
+                        <!-- Productos -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'productos.productos_list' %}active{% endif %}"
+                               href="{{ url_for('productos.productos_list') }}"
+                               title="Gestionar catálogo de productos">
+                                <i class="bi bi-box"></i>
+                                <span>Productos</span>
+                            </a>
+                        </li>
+
+                        <!-- Admin: Registros -->
+                        {% if g.usuario['rol'] == 'admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'registros.listado_registros' %}active{% endif %}"
+                                   href="{{ url_for('registros.listado_registros') }}"
+                                   title="Ver análisis y registros de ventas">
+                                    <i class="bi bi-file-earmark-chart"></i>
+                                    <span>Registros</span>
+                                </a>
+                            </li>
+
+                            <!-- Admin: Inventario -->
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint and request.endpoint.startswith('inventario') %}active{% endif %}"
+                                   href="{{ url_for('inventario.inventario_view') }}"
+                                   title="Ver estado del inventario">
+                                    <i class="bi bi-list-check"></i>
+                                    <span>Inventario</span>
+                                </a>
+                            </li>
+
+                            <!-- Admin: Panel Admin -->
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}"
+                                   href="{{ url_for('admin.admin_usuarios') }}"
+                                   title="Gestionar usuarios y configuración">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Administración</span>
+                                </a>
+                            </li>
+                        {% endif %}
                     {% endif %}
                 </ul>
 
+                <!-- Menu derecho (usuario) -->
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     {% if g.usuario %}
+                        <!-- Info del usuario -->
                         <li class="nav-item">
-                            <span class="nav-link text-light">Hola, {{ g.usuario['username'] }}</span>
+                            <span class="navbar-user">
+                                <i class="bi bi-person-circle"></i>
+                                <span>{{ g.usuario['username'] }}</span>
+                            </span>
                         </li>
+
+                        <!-- Botón cerrar sesión -->
                         <li class="nav-item">
-                            <a class="nav-link btn btn-outline-light btn-sm ms-2" href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+                            <a class="nav-link btn btn-logout btn-sm ms-2"
+                               href="{{ url_for('auth.logout') }}"
+                               title="Cerrar sesión">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Salir</span>
+                            </a>
                         </li>
                     {% else %}
+                        <!-- Link a login si no está autenticado -->
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.login') }}">Iniciar sesión</a>
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <i class="bi bi-box-arrow-in-right"></i>
+                                <span>Iniciar sesión</span>
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
@@ -83,39 +330,71 @@
         </div>
     </nav>
 
-    <div class="container mt-4 content-container">
-        <!-- Mostrar mensajes flash -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ 'success' if category=='success' else 'danger' }} flash-message" role="alert">
-                {{ message }}
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+    <!-- Contenido principal -->
+    <div class="main-container">
+        <div class="container-fluid px-3">
+            <!-- Alertas flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            {% for category, message in messages %}
+                                <div class="alert flash-message alert-{{ 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' if category == 'info' else 'danger' }}"
+                                     role="alert">
+                                    <i class="bi bi-{{ 'check-circle-fill' if category == 'success' else 'exclamation-triangle-fill' if category == 'warning' else 'info-circle-fill' if category == 'info' else 'x-circle-fill' }}"></i>
+                                    <div>{{ message }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endwith %}
 
-        {% block content %}
-        {% endblock %}
+            <!-- Bloque de contenido -->
+            {% block content %}
+            {% endblock %}
+        </div>
     </div>
 
-    <footer class="text-center py-3 mt-4">
-        <small class="text-muted">&copy; 2026 Kairos</small>
+    <!-- Footer -->
+    <footer class="footer-kairos">
+        <small>&copy; 2026 Kairos - Sistema de Ventas y Gestión. Todos los derechos reservados.</small>
     </footer>
 
+
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Sistema de alertas con Design System -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Desaparecer alertas automáticamente después de 3 segundos
-            const alerts = document.querySelectorAll('.flash-message');
-            alerts.forEach(function(alert) {
-                setTimeout(function() {
-                    alert.style.transition = 'opacity 0.5s ease-out';
-                    alert.style.opacity = '0';
+            // Auto-hide flash messages después de 4 segundos
+            const flashMessages = document.querySelectorAll('.flash-message');
+
+            flashMessages.forEach(function(alert) {
+                // Mostrar alerta con animación
+                alert.style.display = 'flex';
+
+                // Programar desaparición
+                const timeoutId = setTimeout(function() {
+                    alert.classList.add('fade-out');
+
+                    // Remover del DOM después de que termine la animación
                     setTimeout(function() {
                         alert.remove();
-                    }, 500);
-                }, 3000);
+                    }, 150);
+                }, 4000);
+
+                // Permitir cerrar manualmente
+                alert.addEventListener('click', function(e) {
+                    if (e.target.closest('[data-bs-dismiss="alert"]')) {
+                        clearTimeout(timeoutId);
+                        alert.classList.add('fade-out');
+                        setTimeout(function() {
+                            alert.remove();
+                        }, 150);
+                    }
+                });
             });
         });
     </script>
