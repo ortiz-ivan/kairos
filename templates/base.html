@@ -94,6 +94,19 @@
             color: white;
         }
 
+        /* Estilos globales de texto */
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-primary) !important;
+        }
+
+        p, div, span, small, code, label {
+            color: var(--text-primary);
+        }
+
+        strong, b {
+            color: var(--text-primary);
+        }
+
         /* Layout principal */
         .main-container {
             min-height: calc(100vh - 120px);
@@ -210,12 +223,34 @@
             transition: all var(--transition-fast);
         }
 
+        .table tbody tr:hover td {
+            color: var(--text-primary);
+        }
+
         .table-striped tbody tr:nth-of-type(odd) {
             background-color: var(--bg-primary);
         }
 
         .table-striped tbody tr:nth-of-type(even) {
             background-color: var(--bg-secondary);
+        }
+
+        /* Asegurar que todo texto en tablas sea visible */
+        .table td,
+        .table th,
+        .table td strong,
+        .table td small,
+        .table td code,
+        .table td span {
+            color: var(--text-primary) !important;
+        }
+
+        .table .text-secondary {
+            color: var(--text-secondary) !important;
+        }
+
+        .table .text-info {
+            color: var(--color-info) !important;
         }
 
         /* Forms */
@@ -274,8 +309,36 @@
             font-weight: var(--font-weight-semibold);
         }
 
+        .card-header h5,
+        .card-header h6,
+        .card-header strong,
+        .card-header span {
+            color: var(--text-primary) !important;
+        }
+
         .card-body {
             background-color: var(--bg-secondary);
+        }
+
+        .card-body h5,
+        .card-body h6,
+        .card-body p,
+        .card-body strong,
+        .card-body span,
+        .card-body small,
+        .card-body .text-secondary {
+            color: var(--text-primary) !important;
+        }
+
+        .card-body .text-secondary {
+            color: var(--text-secondary) !important;
+        }
+
+        .card-body .text-info,
+        .card-body .text-success,
+        .card-body .text-danger,
+        .card-body .text-warning {
+            color: inherit !important;
         }
 
         /* Buttons */
