@@ -8,25 +8,25 @@ Proporciona componentes separados por responsabilidad.
    Responsabilidad: Mostrar información del producto seleccionado
 ========================================== #}
 {% macro product_preview(id='previewProducto') %}
-<div id="{{ id }}" class="card mt-3" style="display: none; border-left: 4px solid #198754; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+<div id="{{ id }}" class="card mt-3" style="display: none; border-left: 4px solid var(--color-success);">
     <div class="card-body py-2 px-3">
         <div class="row g-3">
             <div class="col-md-6">
-                <small class="text-muted d-block">Producto</small>
-                <strong id="previewNombre" class="text-dark"></strong>
+                <small class="text-secondary d-block">Producto</small>
+                <strong id="previewNombre" class="text-primary"></strong>
             </div>
             <div class="col-md-3">
-                <small class="text-muted d-block">Precio</small>
+                <small class="text-secondary d-block">Precio</small>
                 <strong id="previewPrecio" class="text-success"></strong>
             </div>
             <div class="col-md-3">
-                <small class="text-muted d-block">Stock</small>
+                <small class="text-secondary d-block">Stock</small>
                 <strong id="previewStock" class="text-info"></strong>
             </div>
         </div>
         <div class="row mt-2">
             <div class="col-12">
-                <small class="text-muted d-block">Categoría</small>
+                <small class="text-secondary d-block">Categoría</small>
                 <span id="previewCategoria" class="badge bg-secondary"></span>
             </div>
         </div>
@@ -50,7 +50,7 @@ Proporciona componentes separados por responsabilidad.
         </button>
     </div>
     <datalist id="sugerencias"></datalist>
-    <small class="form-text text-muted">Presione Enter para agregar por código, o use el botón Buscar para seleccionar por nombre</small>
+    <small class="form-text text-secondary">Presione Enter para agregar por código, o use el botón Buscar para seleccionar por nombre</small>
 
     {{ product_preview() }}
 
@@ -64,8 +64,8 @@ Proporciona componentes separados por responsabilidad.
 ========================================== #}
 {% macro products_table() %}
 <div class="table-responsive">
-    <table class="table table-striped table-hover table-bordered align-middle">
-        <thead class="table-dark">
+    <table class="table table-hover align-middle mb-0">
+        <thead>
             <tr>
                 <th>Código</th>
                 <th>Producto</th>
@@ -87,15 +87,15 @@ Proporciona componentes separados por responsabilidad.
    Responsabilidad: Mostrar total, items y botón de registro
 ========================================== #}
 {% macro summary_panel() %}
-<div class="card shadow-sm sticky-top" style="top: 1rem;">
+<div class="card sticky-top" style="top: 1rem;">
     <div class="card-body text-center">
-        <small class="text-muted d-block">TOTAL A PAGAR</small>
+        <small class="text-secondary d-block">TOTAL A PAGAR</small>
         <h1 id="total_venta_grande" class="display-5 text-success mb-1" style="font-weight:800;">₲0</h1>
-        <p id="total_venta_letras" class="text-muted mb-3" style="font-size:0.95rem;">Cero guaraníes</p>
+        <p id="total_venta_letras" class="text-secondary mb-3" style="font-size:0.95rem;">Cero guaraníes</p>
 
         <div class="mb-3">
-            <span class="d-block text-muted">Ítems</span>
-            <h4 id="total_items_count" class="mb-0">0</h4>
+            <span class="d-block text-secondary">Ítems</span>
+            <h4 id="total_items_count" class="mb-0 text-primary">0</h4>
         </div>
 
         <div class="d-grid gap-2 mb-3">
@@ -104,7 +104,7 @@ Proporciona componentes separados por responsabilidad.
             </button>
         </div>
 
-        <div class="text-start small text-muted">
+        <div class="text-start small text-secondary">
             <div>Productos sin stock: <span id="productos_sin_stock">0</span></div>
             <div>Errores: <span id="errores_count">0</span></div>
         </div>
@@ -120,15 +120,15 @@ Proporciona componentes separados por responsabilidad.
 <div class="modal fade" id="modalBuscarProducto" tabindex="-1" aria-labelledby="modalBuscarLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header">
                 <h5 class="modal-title" id="modalBuscarLabel">Buscar Producto por Nombre</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
                     <input type="text" id="inputBuscarProducto" class="form-control form-control-lg"
                            placeholder="Ingrese nombre, código o categoría del producto..." autocomplete="off">
-                    <small class="form-text text-muted d-block mt-2">
+                    <small class="form-text text-secondary d-block mt-2">
                         Comience a escribir para ver productos que coincidan...
                     </small>
                 </div>
@@ -142,8 +142,8 @@ Proporciona componentes separados por responsabilidad.
 
                 <!-- Tabla de resultados -->
                 <div class="table-responsive" id="tablaResultadosContainer" style="display: none;">
-                    <table class="table table-hover table-striped align-middle">
-                        <thead class="table-light">
+                    <table class="table table-hover align-middle">
+                        <thead>
                             <tr>
                                 <th>Producto</th>
                                 <th>Código</th>
@@ -165,7 +165,7 @@ Proporciona componentes separados por responsabilidad.
                 </div>
 
                 <!-- Mensaje inicial -->
-                <div id="mensajeInicial" class="text-center text-muted">
+                <div id="mensajeInicial" class="text-center text-secondary">
                     <i class="bi bi-search" style="font-size: 2rem; opacity: 0.5;"></i>
                     <p class="mt-2">Comience a escribir para buscar productos...</p>
                 </div>
