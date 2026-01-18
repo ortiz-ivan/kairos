@@ -2,10 +2,14 @@
 {% block title %}{{ action }} Usuario{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <div class="card shadow-sm">
-    <div class="card-header bg-dark text-white">
-      <h4 class="mb-0">{{ action }} Usuario</h4>
+<div class="container-fluid">
+  <div class="mb-4">
+    <h2 class="mb-0">{{ action }} Usuario</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0"><i class="bi bi-person-circle"></i> Información del Usuario</h5>
     </div>
     <div class="card-body">
       <form method="POST" id="formUsuario">
@@ -21,7 +25,7 @@
             maxlength="100"
             required
           >
-          <small class="form-text text-muted" id="nombreInfo">Máximo 100 caracteres</small>
+          <small class="form-text text-secondary" id="nombreInfo">Máximo 100 caracteres</small>
           <small class="form-text text-danger d-none" id="nombreError"></small>
         </div>
 
@@ -44,7 +48,7 @@
               <i class="bi bi-exclamation-circle text-warning" id="usernameWarning"></i>
             </span>
           </div>
-          <small class="form-text text-muted" id="usernameInfo">3-20 caracteres</small>
+          <small class="form-text text-secondary" id="usernameInfo">3-20 caracteres</small>
           <small class="form-text text-danger d-none" id="usernameError"></small>
           <small class="form-text text-warning d-none" id="usernameWarningText">Este nombre de usuario ya está en uso</small>
         </div>
@@ -60,7 +64,7 @@
             minlength="6"
             {% if not usuario %}required{% endif %}
           >
-          <small class="form-text text-muted" id="passwordInfo">
+          <small class="form-text text-secondary" id="passwordInfo">
             {% if usuario %}
               Mínimo 6 caracteres. Déjalo vacío si no deseas cambiar.
             {% else %}

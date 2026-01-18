@@ -183,8 +183,248 @@
             animation: fadeOut var(--transition-fast) ease-out forwards;
         }
 
-        /* Footer */
-        .footer-kairos {
+        /* Tables */
+        .table {
+            color: var(--text-primary);
+            border-color: var(--border-default);
+        }
+
+        .table thead th {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--border-default);
+            font-weight: var(--font-weight-semibold);
+            text-transform: uppercase;
+            font-size: var(--font-size-small);
+            letter-spacing: 0.5px;
+        }
+
+        .table tbody td {
+            background-color: var(--bg-primary);
+            border-color: var(--border-default);
+            vertical-align: middle;
+        }
+
+        .table tbody tr:hover {
+            background-color: var(--bg-secondary);
+            transition: all var(--transition-fast);
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: var(--bg-primary);
+        }
+
+        .table-striped tbody tr:nth-of-type(even) {
+            background-color: var(--bg-secondary);
+        }
+
+        /* Forms */
+        .form-label {
+            color: var(--text-primary);
+            font-weight: var(--font-weight-medium);
+            margin-bottom: var(--space-sm);
+        }
+
+        .form-control,
+        .form-select,
+        textarea.form-control {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-default);
+            font-size: var(--font-size-body);
+        }
+
+        .form-control:focus,
+        .form-select:focus,
+        textarea.form-control:focus {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 0.25rem var(--color-primary-light);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .form-control:disabled,
+        .form-select:disabled {
+            background-color: var(--bg-tertiary);
+            color: var(--text-disabled);
+            border-color: var(--border-default);
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            color: var(--text-primary);
+            transition: all var(--transition-normal);
+        }
+
+        .card:hover {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 1px var(--color-primary-light);
+        }
+
+        .card-header {
+            background-color: var(--bg-tertiary);
+            border-color: var(--border-default);
+            color: var(--text-primary);
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .card-body {
+            background-color: var(--bg-secondary);
+        }
+
+        /* Buttons */
+        .btn {
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition-fast);
+            border-radius: var(--radius-md);
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-primary-hover);
+            border-color: var(--color-primary-hover);
+        }
+
+        .btn-primary:active {
+            background-color: var(--color-primary-active);
+            border-color: var(--color-primary-active);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-tertiary);
+            border-color: var(--border-default);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--border-default);
+            color: var(--color-primary);
+        }
+
+        .btn-success {
+            background-color: var(--color-success);
+            border-color: var(--color-success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: var(--color-success);
+            border-color: var(--color-success);
+            opacity: 0.9;
+        }
+
+        .btn-danger {
+            background-color: var(--color-danger);
+            border-color: var(--color-danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--color-danger);
+            border-color: var(--color-danger);
+            opacity: 0.9;
+        }
+
+        .btn-outline-secondary {
+            color: var(--text-primary);
+            border-color: var(--border-default);
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        /* Pagination */
+        .pagination {
+            gap: var(--space-xs);
+        }
+
+        .page-link {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-default);
+            color: var(--color-primary);
+        }
+
+        .page-link:hover {
+            background-color: var(--bg-tertiary);
+            border-color: var(--color-primary);
+            color: var(--color-primary-hover);
+        }
+
+        .page-link.active {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        .page-item.disabled .page-link {
+            background-color: var(--bg-tertiary);
+            border-color: var(--border-default);
+            color: var(--text-disabled);
+        }
+
+        /* Modals */
+        .modal-content {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            color: var(--text-primary);
+        }
+
+        .modal-header {
+            background-color: var(--bg-tertiary);
+            border-color: var(--border-default);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            color: var(--text-primary);
+        }
+
+        .btn-close {
+            filter: invert(1);
+        }
+
+        /* Badges */
+        .badge {
+            font-weight: var(--font-weight-medium);
+        }
+
+        .badge.bg-primary {
+            background-color: var(--color-primary) !important;
+        }
+
+        .badge.bg-success {
+            background-color: var(--color-success) !important;
+        }
+
+        .badge.bg-danger {
+            background-color: var(--color-danger) !important;
+        }
+
+        .badge.bg-warning {
+            background-color: var(--color-warning) !important;
+            color: var(--bg-primary);
+        }
+
+        .badge.bg-info {
+            background-color: var(--color-info) !important;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 991.98px) {
             background-color: var(--bg-secondary);
             border-top: 1px solid var(--border-default);
             margin-top: auto;
@@ -269,7 +509,7 @@
                                    href="{{ url_for('registros.listado_registros') }}"
                                    title="Ver análisis y registros de ventas">
                                     <i class="bi bi-file-earmark-chart"></i>
-                                    <span>Registros</span>
+                                    <span>Reportes</span>
                                 </a>
                             </li>
 

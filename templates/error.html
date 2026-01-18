@@ -2,46 +2,46 @@
 {% block title %}Error {{ error_code }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card border-danger shadow-lg">
-                <div class="card-header bg-danger text-white">
-                    <h2 class="mb-0">
+<div class="container-fluid">
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-6">
+            <div class="card border border-danger">
+                <div class="card-header">
+                    <h5 class="mb-0 text-danger">
                         <i class="bi bi-exclamation-triangle-fill"></i>
                         Error {{ error_code }}
-                    </h2>
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <h4 class="card-title text-danger mb-3">{{ error_title }}</h4>
-                    <p class="card-text text-muted mb-4">{{ error_message }}</p>
+                    <h5 class="text-danger mb-3">{{ error_title }}</h5>
+                    <p class="text-secondary mb-4">{{ error_message }}</p>
 
                     <!-- Acciones sugeridas según el código de error -->
-                    <div class="alert alert-info" role="alert">
-                        <strong>¿Qué puedes hacer?</strong>
-                        <ul class="mb-0 mt-2">
+                    <div class="p-3" style="background-color: var(--bg-tertiary); border-radius: var(--radius-md); border-left: 4px solid var(--color-info);">
+                        <strong class="text-primary">¿Qué puedes hacer?</strong>
+                        <ul class="mb-0 mt-2 text-secondary">
                             {% if error_code == 404 %}
                                 <li>Verifica que la URL sea correcta</li>
-                                <li><a href="{{ url_for('auth.login') if not g.usuario else url_for('ventas.agregar_venta_view') }}" class="alert-link">Vuelve a la página principal</a></li>
+                                <li><a href="{{ url_for('auth.login') if not g.usuario else url_for('ventas.agregar_venta_view') }}" class="link-primary">Vuelve a la página principal</a></li>
                                 <li>Contacta al administrador si el problema persiste</li>
                             {% elif error_code == 403 %}
                                 <li>Verifica que tengas los permisos necesarios</li>
                                 <li>Contacta al administrador para solicitar acceso</li>
-                                <li><a href="{{ url_for('auth.login') if not g.usuario else url_for('ventas.agregar_venta_view') }}" class="alert-link">Vuelve a la página principal</a></li>
+                                <li><a href="{{ url_for('auth.login') if not g.usuario else url_for('ventas.agregar_venta_view') }}" class="link-primary">Vuelve a la página principal</a></li>
                             {% elif error_code == 500 %}
                                 <li>Intenta recargar la página</li>
                                 <li>Limpia el caché de tu navegador</li>
-                                <li>Si el problema persiste, <a href="mailto:admin@kairos.com" class="alert-link">contacta al soporte técnico</a></li>
+                                <li>Si el problema persiste, <a href="mailto:admin@kairos.com" class="link-primary">contacta al soporte técnico</a></li>
                             {% else %}
-                                <li><a href="{{ url_for('auth.login') if not g.usuario else url_for('ventas.agregar_venta_view') }}" class="alert-link">Vuelve a la página principal</a></li>
+                                <li><a href="{{ url_for('auth.login') if not g.usuario else url_for('ventas.agregar_venta_view') }}" class="link-primary">Vuelve a la página principal</a></li>
                                 <li>Intenta recargar la página</li>
                                 <li>Si el problema persiste, contacta al administrador</li>
                             {% endif %}
                         </ul>
                     </div>
                 </div>
-                <div class="card-footer bg-light">
-                    <small class="text-muted">
+                <div class="card-footer">
+                    <small class="text-secondary">
                         Si este error persiste, por favor proporciona el código de error ({{ error_code }})
                         al equipo de soporte.
                     </small>

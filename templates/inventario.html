@@ -1,58 +1,60 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-3">Inventario de Productos</h2>
-    <a href="{{ url_for('productos.agregar_producto_view') }}" class="btn btn-success mb-3">
-        <i class="bi bi-plus-lg"></i> Agregar Producto
-    </a>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Inventario de Productos</h2>
+        <a href="{{ url_for('productos.agregar_producto_view') }}" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i> Agregar Producto
+        </a>
+    </div>
 
     <!-- Resumen de inventario -->
     {% set total_productos = total_items if total_items is defined else productos|length %}
     {% set stock_bajo_count = stock_bajo_count if stock_bajo_count is defined else productos|selectattr("stock", "le", stock_bajo)|list|length %}
-    {% set stock_medio_count = stock_medio_count if stock_medio_count is defined else productos|selectattr("stock", "gt", stock_bajo)|selectattr("stock", "le", stock_bajo + 5)|list|length %}
 
     <div class="row g-3 mb-4">
         <!-- Total de productos -->
         <div class="col-md-3">
-            <div class="card border-primary shadow-sm">
+            <div class="card">
                 <div class="card-body text-center">
-                    <h6 class="card-title text-muted">Total de Productos</h6>
-                    <h3 class="text-primary">{{ total_productos }}</h3>
+                    <h6 class="card-title text-secondary mb-2">Total de Productos</h6>
+                    <h3 class="text-primary mb-0">{{ total_productos }}</h3>
                 </div>
             </div>
         </div>
 
         <!-- Total en stock -->
         <div class="col-md-3">
-            <div class="card border-success shadow-sm">
+            <div class="card">
                 <div class="card-body text-center">
-                    <h6 class="card-title text-muted">Total en Stock</h6>
-                    <h3 class="text-success">{{ total_stock }}</h3>
-                    <small class="text-muted">unidades</small>
+                    <h6 class="card-title text-secondary mb-2">Total en Stock</h6>
+                    <h3 class="text-success mb-0">{{ total_stock }}</h3>
+                    <small class="text-secondary">unidades</small>
                 </div>
             </div>
         </div>
 
         <!-- Valor total del inventario -->
         <div class="col-md-3">
-            <div class="card border-info shadow-sm">
+            <div class="card">
                 <div class="card-body text-center">
-                    <h6 class="card-title text-muted">Valor Total Inventario</h6>
-                    <h3 class="text-info">₲{{ '{:,.0f}'.format(valor_total_inventario) }}</h3>
+                    <h6 class="card-title text-secondary mb-2">Valor Total</h6>
+                    <h3 class="text-info mb-0">₲{{ '{:,.0f}'.format(valor_total_inventario) }}</h3>
                 </div>
             </div>
         </div>
 
-        <!-- Producto más vendido -->
+        <!-- Stock bajo -->
         <div class="col-md-3">
-            <div class="card border-warning shadow-sm">
+            <div class="card">
                 <div class="card-body text-center">
-                    <h6 class="card-title text-muted">Producto Más Vendido</h6>
-                    {% if producto_mas_vendido %}
-                        <h5 class="text-warning">{{ producto_mas_vendido['nombre'] }}</h5>
-                        <small class="text-muted">{{ producto_mas_vendido['cantidad_vendida'] }} unidades vendidas</small>
+                    <h6 class="card-title text-secondary mb-2">Stock Bajo</h6>
+                    {% if stock_bajo_count > 0 %}
+                        <h3 class="text-warning mb-0">{{ stock_bajo_count }}</h3>
+                        <small class="text-secondary">requiere reorden</small>
                     {% else %}
-                        <p class="text-muted">Sin ventas registradas</p>
+                        <h3 class="text-success mb-0">0</h3>
+                        <small class="text-secondary">excelente</small>
                     {% endif %}
                 </div>
             </div>

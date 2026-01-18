@@ -2,13 +2,19 @@
 {% import "macros_ventas.html" as ventas %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container-fluid">
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-10">
+            <h2 class="mb-0">Registrar Venta</h2>
+        </div>
+    </div>
+
     <div class="row justify-content-center">
-        <div class="col-md-10">
+        <div class="col-lg-10">
             <!-- CARD PRINCIPAL -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">Registrar Venta</h4>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-cart-plus"></i> Nueva Venta</h5>
                 </div>
 
                 <div class="card-body">
@@ -24,21 +30,21 @@
 
                         <div class="row">
                             <!-- Columna izquierda: Tabla de productos -->
-                            <div class="col-md-8">
+                            <div class="col-lg-8">
                                 {{ ventas.products_table() }}
                             </div>
 
                             <!-- Columna derecha: Panel resumen POS -->
-                            <div class="col-md-4">
+                            <div class="col-lg-4">
                                 {{ ventas.summary_panel() }}
                             </div>
                         </div>
                     </form>
 
                     <!-- Instrucciones -->
-                    <div class="mt-2">
-                        <small class="text-muted">
-                            <strong>Instrucciones:</strong> Escanee o ingrese códigos de barras y presione Enter.
+                    <div class="mt-3 p-3" style="background-color: var(--bg-tertiary); border-radius: var(--radius-md);">
+                        <small class="text-secondary">
+                            <strong><i class="bi bi-info-circle"></i> Instrucciones:</strong> Escanee o ingrese códigos de barras y presione Enter.
                             Ajuste cantidades según sea necesario. El sistema validará stock automáticamente.
                         </small>
                     </div>

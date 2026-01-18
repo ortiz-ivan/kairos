@@ -7,15 +7,15 @@ comunes en la aplicación Kairos.
 
 {% macro stat_card(title, value, subtitle, icon_class, bg_class='bg-primary', text_class='text-white') %}
 <div class="col-md-3">
-    <div class="card border-0 shadow-sm {{ bg_class }} {{ text_class }} h-100">
+    <div class="card border-0 h-100" style="background: var(--bg-secondary); border-left: 4px solid var(--color-primary);">
         <div class="card-body d-flex align-items-center">
             <div class="flex-grow-1">
                 <div class="d-flex align-items-center mb-2">
-                    <i class="bi {{ icon_class }} me-2" style="font-size: 1.5rem;"></i>
-                    <small class="opacity-75">{{ title }}</small>
+                    <i class="bi {{ icon_class }} me-2 text-primary" style="font-size: 1.5rem;"></i>
+                    <small class="text-secondary">{{ title }}</small>
                 </div>
-                <h3 class="mb-0">{{ value }}</h3>
-                <small class="opacity-75">{{ subtitle }}</small>
+                <h3 class="mb-0 text-primary">{{ value }}</h3>
+                <small class="text-secondary">{{ subtitle }}</small>
             </div>
         </div>
     </div>
@@ -24,11 +24,11 @@ comunes en la aplicación Kairos.
 
 {% macro mini_stat_card(title, value, subtitle, icon_class, icon_color='text-primary') %}
 <div class="col-md-3">
-    <div class="card border-0 shadow-sm bg-light">
+    <div class="card border-0" style="background-color: var(--bg-secondary);">
         <div class="card-body text-center">
             <i class="bi {{ icon_class }} {{ icon_color }}" style="font-size: 2rem;"></i>
-            <h5 class="mt-2">{{ value }}</h5>
-            <small class="text-muted">{{ subtitle }}</small>
+            <h5 class="mt-2 text-primary">{{ value }}</h5>
+            <small class="text-secondary">{{ subtitle }}</small>
         </div>
     </div>
 </div>
@@ -36,8 +36,8 @@ comunes en la aplicación Kairos.
 
 {% macro chart_card(title, chart_id, chart_type='line', height='300', bg_class='bg-primary') %}
 <div class="col-lg-{{ '8' if chart_type == 'line' else '4' }}">
-    <div class="card shadow-sm h-100">
-        <div class="card-header {{ bg_class }} text-white">
+    <div class="card h-100">
+        <div class="card-header">
             <h5 class="mb-0"><i class="bi bi-{{ 'bar-chart' if chart_type == 'line' else 'star' if chart_type == 'doughnut' else 'graph-up-arrow' }}"></i> {{ title }}</h5>
         </div>
         <div class="card-body">
