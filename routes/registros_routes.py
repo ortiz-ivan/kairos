@@ -1,10 +1,21 @@
 """Rutas para el listado y visualización de registros de ventas."""
 
+import csv
+import io
 from datetime import datetime
 from functools import wraps
 from urllib.parse import urlencode
 
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    flash,
+    g,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+)
 
 from models.venta import obtener_detalle_venta, obtener_ventas
 from services.ventas_service import (
@@ -140,4 +151,86 @@ def listado_registros():
         total_items=total_items,
         query_params=query_params,
         query_string=query_string,
+    )
+
+
+@registros_bp.route("/exportar-csv", methods=["POST"])
+@login_required
+@admin_required
+def exportar_csv():
+    """Exporta registros de ventas filtrados a CSV."""
+    logger.info(f"Usuario {g.usuario['username']} inició exportación a CSV")
+
+    # Obtener todas las ventas
+    ventas_list = obtener_ventas()
+
+    # Obtener parámetros de filtro del request JSON
+    data = request.get_json() or {}
+    search_query = data.get("search", "").strip().lower()
+    fecha_desde = data.get("fecha_desde", "").strip()
+    fecha_hasta = data.get("fecha_hasta", "").strip()
+    usuario_filtro = data.get("usuario", "").strip()
+    monto_minimo = data.get("monto_minimo", "").strip()
+
+    # Aplicar filtros
+    ventas_filtradas = filter_ventas(
+        ventas_list,
+        obtener_detalle_venta,
+        search_query=search_query,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta,
+        usuario_filtro=usuario_filtro,
+        monto_minimo=monto_minimo,
+    )
+
+    logger.info(
+        f"CSV - Usuario: {g.usuario['username']}, "
+        f"Total: {len(ventas_list)}, Exportadas: {len(ventas_filtradas)}"
+    )
+
+    # Crear CSV en memoria
+    csv_buffer = io.StringIO()
+    writer = csv.writer(csv_buffer, lineterminator="\n")
+
+    # Headers
+    headers = [
+        "ID Venta",
+        "Fecha",
+        "Usuario",
+        "Cantidad Items",
+        "Total (₲)",
+        "Productos",
+    ]
+    writer.writerow(headers)
+
+    # Filas de datos
+    for venta in ventas_filtradas:
+        detalles = obtener_detalle_venta(venta["id"])
+        productos = ", ".join([d.get("nombre", "N/A") for d in detalles])
+        cantidad_items = sum([d.get("cantidad", 0) for d in detalles])
+
+        row = [
+            venta.get("id", ""),
+            venta.get("fecha", ""),
+            venta.get("username", ""),
+            cantidad_items,
+            venta.get("total", ""),
+            productos,
+        ]
+        writer.writerow(row)
+
+    # Convertir StringIO a BytesIO
+    csv_buffer.seek(0)
+    bytes_buffer = io.BytesIO(csv_buffer.getvalue().encode("utf-8-sig"))
+    bytes_buffer.seek(0)
+
+    # Generar nombre de archivo con fecha/filtros
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"registros_ventas_{timestamp}.csv"
+
+    return send_file(
+        bytes_buffer,
+        mimetype="text/csv; charset=utf-8",
+        as_attachment=True,
+        download_name=filename,
     )

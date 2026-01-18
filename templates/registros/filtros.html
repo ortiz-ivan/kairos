@@ -10,7 +10,7 @@
                     id="search"
                     name="search"
                     class="form-control"
-                    placeholder="Ej: 1, admin, Arroz..."
+                    placeholder="Ej: 1, admin, Coca Cola..."
                     value="{{ search_query }}"
                 >
             </div>
@@ -71,7 +71,70 @@
                 <a href="{{ url_for('registros.listado_registros') }}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-counterclockwise"></i> Limpiar Filtros
                 </a>
+                <button type="button" class="btn btn-success" id="btnExportarCSV">
+                    <i class="bi bi-download"></i> Exportar a CSV
+                </button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnExportar = document.getElementById('btnExportarCSV');
+    const form = document.getElementById('filtrosForm');
+
+    btnExportar.addEventListener('click', async function(e) {
+        e.preventDefault();
+
+        // Obtener valores de filtros del formulario
+        const filtros = {
+            search: document.getElementById('search').value.trim(),
+            usuario: document.getElementById('usuario').value.trim(),
+            monto_minimo: document.getElementById('monto_minimo').value.trim(),
+            fecha_desde: document.getElementById('fecha_desde').value.trim(),
+            fecha_hasta: document.getElementById('fecha_hasta').value.trim(),
+        };
+
+        try {
+            // Deshabilitar botón y mostrar loading
+            const originalText = btnExportar.innerHTML;
+            btnExportar.disabled = true;
+            btnExportar.innerHTML = '<i class="bi bi-hourglass-split"></i> Exportando...';
+
+            // Enviar request al servidor
+            const response = await fetch('{{ url_for("registros.exportar_csv") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(filtros),
+            });
+
+            if (!response.ok) {
+                throw new Error('Error en la exportación');
+            }
+
+            // Descargar archivo
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'registros_ventas.csv';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            // Restaurar botón
+            btnExportar.disabled = false;
+            btnExportar.innerHTML = originalText;
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al exportar CSV. Por favor intenta nuevamente.');
+            btnExportar.disabled = false;
+            btnExportar.innerHTML = originalText;
+        }
+    });
+});
+</script>
