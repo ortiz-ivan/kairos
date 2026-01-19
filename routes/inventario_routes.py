@@ -64,6 +64,17 @@ def inventario_view():
     total_stock = sum(p["stock"] for p in productos_list)
     valor_total_inventario = sum(p["stock"] * p["precio"] for p in productos_list)
 
+    # Calcular estadísticas por categoría
+    stats_por_categoria = {}
+    for cat in categorias:
+        productos_cat = [p for p in productos_list if p["categoria"] == cat]
+        stats_por_categoria[cat] = {
+            "cantidad_items": len(productos_cat),
+            "valor_total": sum(p["stock"] * p["precio"] for p in productos_cat),
+            "stock_total": sum(p["stock"] for p in productos_cat),
+            "productos": productos_cat,
+        }
+
     # Indicadores de stock (calculados sobre la lista completa)
     stock_bajo_threshold = 10
     stock_bajo_count = len(
@@ -114,6 +125,7 @@ def inventario_view():
         filtro_categoria=filtro_categoria,
         total_stock=total_stock,
         valor_total_inventario=valor_total_inventario,
+        stats_por_categoria=stats_por_categoria,
         producto_mas_vendido=producto_mas_vendido,
         # Paginación
         page=page,

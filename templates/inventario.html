@@ -67,6 +67,44 @@
         <span class="badge bg-warning text-dark">Stock medio: {{ stock_medio_count }}</span>
     </div>
 
+    <!-- Valor por Categoría -->
+    {% if stats_por_categoria %}
+    <div class="mb-4">
+        <h5 class="mb-3"><i class="bi bi-tag-fill"></i> Valor del Inventario por Categoría</h5>
+        <div class="row g-3">
+            {% for categoria, stats in stats_por_categoria.items() | sort %}
+            <div class="col-md-4">
+                <div class="card border-start border-5" style="border-color: var(--color-info) !important;">
+                    <div class="card-body">
+                        <h6 class="card-title text-secondary mb-3">{{ categoria }}</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-secondary">Valor Total:</span>
+                                <span class="h5 text-info mb-0">₲{{ '{:,.0f}'.format(stats.valor_total) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-secondary">Items:</span>
+                                <span class="h6 text-primary mb-0">{{ stats.cantidad_items }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-secondary">Stock Total:</span>
+                                <span class="h6 text-success mb-0">{{ stats.stock_total }} unidades</span>
+                            </div>
+                        </div>
+                        <div class="progress" style="height: 24px;">
+                            {% set porcentaje = (stats.valor_total / valor_total_inventario * 100) if valor_total_inventario > 0 else 0 %}
+                            <div class="progress-bar bg-info" role="progressbar" style="width: {{ porcentaje }}%" aria-valuenow="{{ porcentaje }}" aria-valuemin="0" aria-valuemax="100">
+                                {{ '%.1f'|format(porcentaje) }}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Buscador y Filtro de categoría -->
     <div class="mb-3">
         <div class="row g-2 align-items-end">
