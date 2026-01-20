@@ -50,17 +50,35 @@ def inventario_view():
     productos_list = obtener_productos()
     categorias = sorted({p["categoria"] for p in productos_list})
 
-    # Filtro de categoría (no aplica a los datos del servidor por ahora, pero mantener seleccion)
+    # Filtro de categoría
     filtro_categoria = request.args.get("categoria", "").strip()
+
+    # Búsqueda (nombre o código)
+    busqueda = request.args.get("busqueda", "").strip().lower()
+
+    # Aplicar filtros server-side
+    productos_filtrados = productos_list
+
+    if filtro_categoria:
+        productos_filtrados = [
+            p for p in productos_filtrados if p["categoria"] == filtro_categoria
+        ]
+
+    if busqueda:
+        productos_filtrados = [
+            p
+            for p in productos_filtrados
+            if busqueda in p["nombre"].lower() or busqueda in p["codigo_barras"].lower()
+        ]
 
     # Paginación (10 por página)
     page_arg = request.args.get("page", 1)
     per_page = 10
     productos_pagina, page, per_page, total_items, total_pages = paginate(
-        productos_list, page=page_arg, per_page=per_page
+        productos_filtrados, page=page_arg, per_page=per_page
     )
 
-    # Calcular estadísticas avanzadas
+    # Calcular estadísticas avanzadas (sobre lista completa, no filtrada)
     total_stock = sum(p["stock"] for p in productos_list)
     valor_total_inventario = sum(p["stock"] * p["precio"] for p in productos_list)
 
@@ -123,6 +141,7 @@ def inventario_view():
         stock_bajo=10,
         categorias=categorias,
         filtro_categoria=filtro_categoria,
+        busqueda=busqueda,
         total_stock=total_stock,
         valor_total_inventario=valor_total_inventario,
         stats_por_categoria=stats_por_categoria,

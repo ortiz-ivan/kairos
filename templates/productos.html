@@ -1,11 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Productos</h2>
-        <a href="{{ url_for('productos.agregar_producto_view') }}" class="btn btn-success">
-            <i class="bi bi-plus-lg"></i> Agregar Producto
-        </a>
     </div>
 
     <!-- Filtros -->
@@ -55,7 +52,6 @@
                         <th>Stock</th>
                         <th>Categoría</th>
                         <th>Código</th>
-                        <th style="width: 120px; text-align: center;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -76,12 +72,6 @@
                         <td><small>{{ producto['categoria'] }}</small></td>
                         <td><code class="text-secondary">{{ producto['codigo_barras'] }}</code></td>
                         <td style="text-align: center;">
-                            <a href="{{ url_for('productos.editar_producto_view', id=producto['id']) }}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <a href="{{ url_for('productos.eliminar_producto', id=producto['id']) }}" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro?')">
-                                <i class="bi bi-trash"></i>
-                            </a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -89,30 +79,5 @@
             </table>
         </div>
     </div>
-</div>
-{% endblock %}
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Precio</th>
-                <th>Stock</th>
-                <th>Categoría</th>
-                <th>Código de barras</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for producto in productos %}
-            <tr>
-                <td>{{ producto['id'] }}</td>
-                <td>{{ producto['nombre'] }}</td>
-                <td>₲{{ '{:,.0f}'.format(producto['precio']) }}</td>
-                <td>{{ producto['stock'] }}</td>
-                <td>{{ producto['categoria'] }}</td>
-                <td>{{ producto['codigo_barras'] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 </div>
 {% endblock %}
